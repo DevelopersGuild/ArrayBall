@@ -11,5 +11,4 @@
 @interface Ball : SKSpriteNode
 +(id)ball;
 -(void)move:(int)deltaX withDeltaY:(int)deltaY;
-
 @end

@@ -192,8 +192,9 @@
     }
    
     // if the ball makes contact with the paddle
-    // move the ball up
+    // move the ball up and change the color of the paddle
     else if ([contact.bodyA.node.name isEqualToString:@"ball"] || [contact.bodyB.node.name isEqualToString:@"ball"]) {
+        [paddle setColor:[paddle getRandomColor]];
         [ball move:0 withDeltaY:20];
     }
     
