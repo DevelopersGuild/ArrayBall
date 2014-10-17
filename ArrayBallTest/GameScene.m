@@ -177,6 +177,7 @@
     // move the ball to the left
     if ([contact.bodyA.node.name isEqualToString:@"rightBarrier"] || [contact.bodyB.node.name isEqualToString:@"rightBarrier"]) {
         [ball move:-15 withDeltaY:0];
+        // comment test
    }
     
     // if the ball makes contact with the left barrier
