@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>EC71E2DF-FFA4-4CAF-BB8F-D7AC284F5E75</string>
+	<key>IDESourceControlProjectName</key>
+	<string>ArrayBallTest</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>FC45F5BF4A66188BCED15908E35E98FB58A0FB2B</key>
+		<string>https://github.com/Zelqui/ArrayBallTest.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>ArrayBallTest.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>FC45F5BF4A66188BCED15908E35E98FB58A0FB2B</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/Zelqui/ArrayBallTest.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>FC45F5BF4A66188BCED15908E35E98FB58A0FB2B</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>FC45F5BF4A66188BCED15908E35E98FB58A0FB2B</string>
+			<key>IDESourceControlWCCName</key>
+			<string>ArrayBallTest</string>
+		</dict>
+	</array>
+</dict>
+</plist>
