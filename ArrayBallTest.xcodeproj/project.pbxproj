@@ -10,6 +10,7 @@
 		68014F1F19F1AA8700F10D1B /* ball.png in Resources */ = {isa = PBXBuildFile; fileRef = 68014F1E19F1AA8700F10D1B /* ball.png */; };
 		6808211019EB29C900BB59E6 /* Barriers.m in Sources */ = {isa = PBXBuildFile; fileRef = 6808210F19EB29C900BB59E6 /* Barriers.m */; };
 		6892280319E86C8700C52DC4 /* Ball.m in Sources */ = {isa = PBXBuildFile; fileRef = 6892280219E86C8700C52DC4 /* Ball.m */; };
+		68AE75B619F1C9DA003C00DD /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 68AE75B419F1C9DA003C00DD /* .gitignore */; };
 		68D726C719E47B120016F525 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 68D726C619E47B120016F525 /* main.m */; };
 		68D726CA19E47B120016F525 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 68D726C919E47B120016F525 /* AppDelegate.m */; };
 		68D726CD19E47B120016F525 /* GameScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 68D726CC19E47B120016F525 /* GameScene.m */; };
@@ -38,6 +39,7 @@
 		6808210F19EB29C900BB59E6 /* Barriers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Barriers.m; sourceTree = "<group>"; };
 		6892280119E86C8700C52DC4 /* Ball.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Ball.h; sourceTree = "<group>"; };
 		6892280219E86C8700C52DC4 /* Ball.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Ball.m; sourceTree = "<group>"; };
+		68AE75B419F1C9DA003C00DD /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		68D726C119E47B120016F525 /* ArrayBallTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ArrayBallTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		68D726C519E47B120016F525 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		68D726C619E47B120016F525 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -79,6 +81,7 @@
 		68D726B819E47B120016F525 = {
 			isa = PBXGroup;
 			children = (
+				68AE75B419F1C9DA003C00DD /* .gitignore */,
 				68D726C319E47B120016F525 /* ArrayBallTest */,
 				68D726E219E47B120016F525 /* ArrayBallTestTests */,
 				68D726C219E47B120016F525 /* Products */,
@@ -229,6 +232,7 @@
 				68014F1F19F1AA8700F10D1B /* ball.png in Resources */,
 				68D726D719E47B120016F525 /* Images.xcassets in Resources */,
 				68D726CF19E47B120016F525 /* GameScene.sks in Resources */,
+				68AE75B619F1C9DA003C00DD /* .gitignore in Resources */,
 				68D726D519E47B120016F525 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
