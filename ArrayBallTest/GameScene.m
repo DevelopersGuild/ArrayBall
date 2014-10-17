@@ -79,19 +79,22 @@
 // this creates the button that moves our paddle left
 -(SKSpriteNode *)leftButton
 {
-    SKSpriteNode *leftButton = [SKSpriteNode spriteNodeWithColor:[UIColor purpleColor] size:CGSizeMake(60, 60)];
+    SKSpriteNode *leftButton = [SKSpriteNode spriteNodeWithColor:[UIColor purpleColor] size:CGSizeMake(325, 1500)];
     leftButton.name = @"leftButton";
     leftButton.position = CGPointMake(-180, -50);
-    
+    // Making it invisible
+    leftButton.alpha = 0.0;
     return leftButton;
 }
 
 // this creates the button to move the paddle right
 -(SKSpriteNode *)rightButton
 {
-    SKSpriteNode *rightButton = [SKSpriteNode spriteNodeWithColor:[UIColor purpleColor] size:CGSizeMake(60, 60)];
+    SKSpriteNode *rightButton = [SKSpriteNode spriteNodeWithColor:[UIColor purpleColor] size:CGSizeMake(325, 1500)];
     rightButton.name = @"rightButton";
     rightButton.position = CGPointMake(180, -50);
+    // Making it invisible
+    rightButton.alpha = 0.0;
     
     return rightButton;
 }
