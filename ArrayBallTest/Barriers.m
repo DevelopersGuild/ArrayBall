@@ -9,8 +9,7 @@
 #import "Barriers.h"
 
 @implementation Barriers
-static const uint32_t rightBarrierCategory = 0x1 << 1;
-//static const uint32_t topBarrierCategory = 0x1 << 2;
+static const uint32_t barrierCategory = 0x1 << 1;
 
 
 // factory method to return top barrier
@@ -21,8 +20,9 @@ static const uint32_t rightBarrierCategory = 0x1 << 1;
     topBarrier.name = @"topBarrier";
     topBarrier.position = CGPointMake(0, 700);
     topBarrier.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:topBarrier.size];
-    //topBarrier.physicsBody.categoryBitMask = topBarrierCategory;
+    topBarrier.physicsBody.categoryBitMask = barrierCategory;
     topBarrier.physicsBody.dynamic = NO;
+    topBarrier.physicsBody.affectedByGravity = NO;
     
     return topBarrier;
 }
@@ -35,7 +35,9 @@ static const uint32_t rightBarrierCategory = 0x1 << 1;
     leftBarrier.name = @"leftBarrier";
     leftBarrier.position = CGPointMake(-225, 340);
     leftBarrier.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:leftBarrier.size];
+    leftBarrier.physicsBody.categoryBitMask = barrierCategory;
     leftBarrier.physicsBody.dynamic = NO;
+    leftBarrier.physicsBody.affectedByGravity = NO;
     
     return leftBarrier;
 }
@@ -48,8 +50,9 @@ static const uint32_t rightBarrierCategory = 0x1 << 1;
     rightBarrier.name = @"rightBarrier";
     rightBarrier.position = CGPointMake(225, 340);
     rightBarrier.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:rightBarrier.size];
-    rightBarrier.physicsBody.categoryBitMask = rightBarrierCategory;
+    rightBarrier.physicsBody.categoryBitMask = barrierCategory;
     rightBarrier.physicsBody.dynamic = NO;
+    rightBarrier.physicsBody.affectedByGravity = NO;
     
     return rightBarrier;
 }

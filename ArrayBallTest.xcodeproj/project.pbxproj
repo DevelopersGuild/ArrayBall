@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		68014F1F19F1AA8700F10D1B /* ball.png in Resources */ = {isa = PBXBuildFile; fileRef = 68014F1E19F1AA8700F10D1B /* ball.png */; };
 		6808211019EB29C900BB59E6 /* Barriers.m in Sources */ = {isa = PBXBuildFile; fileRef = 6808210F19EB29C900BB59E6 /* Barriers.m */; };
 		6892280319E86C8700C52DC4 /* Ball.m in Sources */ = {isa = PBXBuildFile; fileRef = 6892280219E86C8700C52DC4 /* Ball.m */; };
 		68D726C719E47B120016F525 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 68D726C619E47B120016F525 /* main.m */; };
@@ -32,6 +33,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		68014F1E19F1AA8700F10D1B /* ball.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ball.png; sourceTree = "<group>"; };
 		6808210E19EB29C900BB59E6 /* Barriers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Barriers.h; sourceTree = "<group>"; };
 		6808210F19EB29C900BB59E6 /* Barriers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Barriers.m; sourceTree = "<group>"; };
 		6892280119E86C8700C52DC4 /* Ball.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Ball.h; sourceTree = "<group>"; };
@@ -103,6 +105,7 @@
 				68D726F019E47B7C0016F525 /* Paddle.m */,
 				6892280119E86C8700C52DC4 /* Ball.h */,
 				6892280219E86C8700C52DC4 /* Ball.m */,
+				68014F1E19F1AA8700F10D1B /* ball.png */,
 				6808210E19EB29C900BB59E6 /* Barriers.h */,
 				6808210F19EB29C900BB59E6 /* Barriers.m */,
 				68D726CE19E47B120016F525 /* GameScene.sks */,
@@ -223,6 +226,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				68D726DA19E47B120016F525 /* LaunchScreen.xib in Resources */,
+				68014F1F19F1AA8700F10D1B /* ball.png in Resources */,
 				68D726D719E47B120016F525 /* Images.xcassets in Resources */,
 				68D726CF19E47B120016F525 /* GameScene.sks in Resources */,
 				68D726D519E47B120016F525 /* Main.storyboard in Resources */,
@@ -373,6 +377,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = ArrayBallTest/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -384,6 +389,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = ArrayBallTest/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

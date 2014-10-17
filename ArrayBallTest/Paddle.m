@@ -9,6 +9,8 @@
 #import "Paddle.h"
 
 @implementation Paddle
+static const uint32_t ballCategory = 0x1 << 0;
+static const uint32_t paddleCategory = 0x1 << 2;
 
 // factory method to return our paddle
 +(id)paddle
@@ -22,8 +24,20 @@
     // give our paddle a physics body
     paddle.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:paddle.size];
     
+    // sets the mass of the paddle to a high value so that the ball
+    // does not push it down
+    paddle.physicsBody.mass = 5000000;
+    
+    // allows our paddle to not be affected by rotational forces from barriers
+    paddle.physicsBody.allowsRotation = NO;
+    
+    paddle.physicsBody.categoryBitMask = paddleCategory;
+    paddle.physicsBody.contactTestBitMask = ballCategory;
+    
     // 'disable' gravity on the paddle so that it does not fall straight down off the screen
-    paddle.physicsBody.dynamic = NO;
+    // read more about 'dynamic' in API
+    paddle.physicsBody.dynamic = YES;
+    paddle.physicsBody.affectedByGravity = NO;
     
     return paddle;
 }

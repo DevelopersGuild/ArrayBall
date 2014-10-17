@@ -79,7 +79,7 @@
 // this creates the button that moves our paddle left
 -(SKSpriteNode *)leftButton
 {
-    SKSpriteNode *leftButton = [SKSpriteNode spriteNodeWithColor:[UIColor purpleColor] size:CGSizeMake(50, 50)];
+    SKSpriteNode *leftButton = [SKSpriteNode spriteNodeWithColor:[UIColor purpleColor] size:CGSizeMake(60, 60)];
     leftButton.name = @"leftButton";
     leftButton.position = CGPointMake(-180, -50);
     
@@ -89,7 +89,7 @@
 // this creates the button to move the paddle right
 -(SKSpriteNode *)rightButton
 {
-    SKSpriteNode *rightButton = [SKSpriteNode spriteNodeWithColor:[UIColor purpleColor] size:CGSizeMake(50, 50)];
+    SKSpriteNode *rightButton = [SKSpriteNode spriteNodeWithColor:[UIColor purpleColor] size:CGSizeMake(60, 60)];
     rightButton.name = @"rightButton";
     rightButton.position = CGPointMake(180, -50);
     
@@ -173,13 +173,29 @@
 
 -(void)didBeginContact:(SKPhysicsContact *)contact
 {
+    // if the ball makes contact with the right barrier
+    // move the ball to the left
     if ([contact.bodyA.node.name isEqualToString:@"rightBarrier"] || [contact.bodyB.node.name isEqualToString:@"rightBarrier"]) {
-        [ball move:-10 withDeltaY:0];
+        [ball move:-15 withDeltaY:0];
    }
     
-   // if ([contact.bodyA.node.name isEqualToString:@"topBarrier"] || [contact.bodyB.node.name isEqualToString:@"topBarrier"]) {
-     //   [ball move:0 withDeltaY:-10];
-   // }
+    // if the ball makes contact with the left barrier
+    // move the ball to the right
+    else if ([contact.bodyA.node.name isEqualToString:@"leftBarrier"] || [contact.bodyB.node.name isEqualToString:@"leftBarrier"]) {
+        [ball move:15 withDeltaY:0];
+    }
+    
+    // if the ball makes contact with the top barrier
+    // move the ball down
+    else if ([contact.bodyA.node.name isEqualToString:@"topBarrier"] || [contact.bodyB.node.name isEqualToString:@"topBarrier"]) {
+        [ball move:0 withDeltaY:-20];
+    }
+   
+    // if the ball makes contact with the paddle
+    // move the ball up
+    else if ([contact.bodyA.node.name isEqualToString:@"ball"] || [contact.bodyB.node.name isEqualToString:@"ball"]) {
+        [ball move:0 withDeltaY:20];
+    }
     
 }
 
