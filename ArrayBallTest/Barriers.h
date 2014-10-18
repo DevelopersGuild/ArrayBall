@@ -12,4 +12,5 @@
 +(id)topBarrier;
 +(id)leftBarrier;
 +(id)rightBarrier;
++(id)gameOverBarrier;
 @end

@@ -57,4 +57,17 @@ static const uint32_t barrierCategory = 0x1 << 1;
     return rightBarrier;
 }
 
++(id)gameOverBarrier
+{
+    Barriers *gameOverBarrier = [Barriers spriteNodeWithColor:[UIColor blackColor] size:CGSizeMake(1000, 20)];
+    gameOverBarrier.name = @"gameOverBarrier";
+    gameOverBarrier.position = CGPointMake(0, -80);
+    gameOverBarrier.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:gameOverBarrier.size];
+    gameOverBarrier.physicsBody.categoryBitMask = barrierCategory;
+    gameOverBarrier.physicsBody.dynamic = NO;
+    gameOverBarrier.physicsBody.affectedByGravity = NO;
+    
+    return gameOverBarrier;
+}
+
 @end
