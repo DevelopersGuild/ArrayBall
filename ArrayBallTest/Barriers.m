@@ -11,7 +11,6 @@
 @implementation Barriers
 static const uint32_t barrierCategory = 0x1 << 1;
 
-
 // factory method to return top barrier
 +(id)topBarrier
 {
@@ -69,5 +68,6 @@ static const uint32_t barrierCategory = 0x1 << 1;
     
     return gameOverBarrier;
 }
+
 
 @end

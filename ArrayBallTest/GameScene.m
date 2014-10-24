@@ -5,7 +5,7 @@
 //  Created by Garrett Crawford on 10/7/14.
 //  Copyright (c) 2014 Noox. All rights reserved.
 //
-//THIS IS A TEST
+//
 
 #import "GameScene.h"
 #import "Paddle.h"
@@ -20,6 +20,7 @@
 @property BOOL isStarted;
 // checks to see if the game is over
 @property BOOL isGameOver;
+
 // this checks if the user is touching
 @property BOOL isTouching;
 // this checks if the paddle is moving left
@@ -36,6 +37,8 @@
 @end
 
 @implementation GameScene
+
+
 {
     // set our paddle to be global
     Paddle *paddle;
@@ -44,11 +47,14 @@
     SKNode *scene;
     
     // set our ball to be global
-    Ball *ball;
+    Ball *ball, *ball2, *ball3;
+    
+    Barriers *rightBarrier, *topBarrier, *leftBarrier;
 }
 
-// Synthesizing some objects
 @synthesize sounds, score, deathLabel;
+
+//static const uint32_t barrierCategory = 0x1 << 1;
 
 -(void)didMoveToView:(SKView *)view {
     /* Setup your scene here */
@@ -71,14 +77,19 @@
     paddle = [Paddle paddle];
     [scene addChild:paddle];
     
+    // setting score to 0
+    self.score = 0;
+    
     // create our ball and add it to the scene
     ball = [Ball ball];
     [scene addChild:ball];
     
+    ball2 = [Ball ball];
+    
     // create our barriers
-    Barriers *topBarrier = [Barriers topBarrier];
-    Barriers *leftBarrier = [Barriers leftBarrier];
-    Barriers *rightBarrier = [Barriers rightBarrier];
+    topBarrier = [Barriers topBarrier];
+    leftBarrier = [Barriers leftBarrier];
+    rightBarrier = [Barriers rightBarrier];
     Barriers *gameOverBarrier = [Barriers gameOverBarrier];
     
     // add them to the scene
@@ -90,6 +101,7 @@
     // add the buttons to the scene
     [scene addChild:[self leftButton]];
     [scene addChild:[self rightButton]];
+    [scene addChild:[self resetButton]];
     
     // add the tapToBegin label
     SKLabelNode *tapToBeginLabel = [SKLabelNode labelNodeWithFontNamed:@"AmericanTypewriter-Bold"];
@@ -103,19 +115,16 @@
     [self animateWithPulse:tapToBeginLabel];
     
     // allocating sounds object
-    sounds = [[Sounds alloc]init];
-    
-    // setting score to 0
-    score = 0;
+    self.sounds = [[Sounds alloc]init];
     
     // properites of a score label
-    deathLabel = [SKLabelNode labelNodeWithFontNamed:@"CoolveticaRg-Regular"];
-    deathLabel.fontSize = 48;
-    deathLabel.text = [NSString stringWithFormat:@"%i",score];
-    deathLabel.position = CGPointMake(150, 600);
-    deathLabel.fontColor = [SKColor blackColor];
-    deathLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
-    [scene addChild:deathLabel];
+    self.deathLabel = [SKLabelNode labelNodeWithFontNamed:@"CoolveticaRg-Regular"];
+    self.deathLabel.fontSize = 48;
+    self.deathLabel.text = [NSString stringWithFormat:@"%i",self.score];
+    self.deathLabel.position = CGPointMake(150, 600);
+    self.deathLabel.fontColor = [SKColor blackColor];
+    self.deathLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
+    [scene addChild:self.deathLabel];
 }
 
 // this creates the button that moves our paddle left
@@ -127,6 +136,15 @@
     // Making it invisible
     leftButton.alpha = 0.0;
     return leftButton;
+}
+
+// for testing purposes
+-(SKSpriteNode *)resetButton
+{
+    SKSpriteNode *resetButton = [SKSpriteNode spriteNodeWithColor:[UIColor purpleColor] size:CGSizeMake(50,50)];
+    resetButton.name = @"resetButton";
+    resetButton.position = CGPointMake(180, 660);
+    return resetButton;
 }
 
 // this creates the button to move the paddle right
@@ -147,6 +165,7 @@
     
     // this removes the tap to start label when the game starts
     [[scene childNodeWithName:@"tapToBeginLabel"] removeFromParent];
+    
     
     // start moving ball
     [ball move:5 withDeltaY:10];
@@ -219,6 +238,7 @@
         CGPoint location = [touch locationInNode:scene];
         
         SKNode *node = [self nodeAtPoint:location];
+        
     
         // if the user touches the left button, move the paddle left
         if ([node.name isEqualToString:@"leftButton"]) {
@@ -231,6 +251,13 @@
             self.movingRight = YES;
             [paddle movePaddleRight:8];
         }
+        
+        else if ([node.name isEqualToString:@"resetButton"]) {
+            GameScene *newScene = [[GameScene alloc] initWithSize:self.frame.size];
+            newScene.scaleMode = SKSceneScaleModeAspectFill;
+            [self.view presentScene:newScene];
+        }
+    
     }
 }
 
@@ -267,32 +294,33 @@
     else if (self.isTouching && self.movingRight) {
         [paddle movePaddleRight:8];
     }
+    
 }
 
 -(void)didBeginContact:(SKPhysicsContact *)contact
 {
+    
+    
+     
     // if the ball makes contact with the right barrier
     // move the ball to the left
     if ([contact.bodyA.node.name isEqualToString:@"rightBarrier"] || [contact.bodyB.node.name isEqualToString:@"rightBarrier"]) {
         [ball move:-15 withDeltaY:0];
-        
-        [sounds playBarrierSound];
-        
-        // comment test
+        [self.sounds playBarrierSound];
    }
     
     // if the ball makes contact with the left barrier
     // move the ball to the right
     else if ([contact.bodyA.node.name isEqualToString:@"leftBarrier"] || [contact.bodyB.node.name isEqualToString:@"leftBarrier"]) {
         [ball move:15 withDeltaY:0];
-        [sounds playBarrierSound];
+        [self.sounds playBarrierSound];
     }
     
     // if the ball makes contact with the top barrier
     // move the ball down
     else if ([contact.bodyA.node.name isEqualToString:@"topBarrier"] || [contact.bodyB.node.name isEqualToString:@"topBarrier"]) {
         [ball move:0 withDeltaY:-20];
-        [sounds playBarrierSound];
+        [self.sounds playBarrierSound];
     }
     
     else if ([contact.bodyA.node.name isEqualToString:@"gameOverBarrier"] || [contact.bodyB.node.name isEqualToString:@"gameOverBarrier"]) {
@@ -301,15 +329,16 @@
    
     // if the ball makes contact with the paddle
     // move the ball up and change the color of the paddle
-    else if ([contact.bodyA.node.name isEqualToString:@"ball"] || [contact.bodyB.node.name isEqualToString:@"ball"]) {
+    else if ([contact.bodyA.node.name isEqualToString:@"ball"] || [contact.bodyB.node.name isEqualToString:@"ball"] ) {
         [paddle setColor:[paddle getRandomColor]];
         [ball move:0 withDeltaY:20];
         
-        score++;
+        self.score++;
         
-        deathLabel.text = [NSString stringWithFormat:@"%i", score];
+        self.deathLabel.text = [NSString stringWithFormat:@"%i", self.score];
         
-        [sounds playPaddleSound];
+        [self.sounds playPaddleSound];
+
     }
 }
 

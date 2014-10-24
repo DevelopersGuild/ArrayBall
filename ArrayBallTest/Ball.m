@@ -9,6 +9,12 @@
 #import "Ball.h"
 #import "Barriers.h"
 
+@interface Ball ()
+
+@property SKNode *world;
+
+@end
+
 @implementation Ball
 
 // set up categories
@@ -22,7 +28,7 @@ static const uint32_t barrierCategory = 0x1 << 1;
     Ball *ball = [Ball spriteNodeWithImageNamed:@"ball"];
     
     // set the position of the ball
-    ball.position = CGPointMake(0, 50);
+    ball.position = CGPointMake(0, 80);
     
     // set ball name property
     ball.name = @"ball";

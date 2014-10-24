@@ -1,6 +1,6 @@
 //
 //  GameViewController.h
-//  ArrayBallTest
+//  ArrayBallGame
 //
 
 //  Copyright (c) 2014 Noox. All rights reserved.
