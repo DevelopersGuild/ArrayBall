@@ -54,7 +54,7 @@
     Barriers *rightBarrier, *topBarrier, *leftBarrier, *gameOverBarrier;
     
     CGRect ballRect;
-    CGRect paddleRect, rightBarrierRect, topBarrierRect, leftBarrierRect;
+    CGRect paddleRect;
 }
 
 // set up all of the categories here
@@ -83,6 +83,7 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     
     // contactDelegate is a protocol
     self.physicsWorld.contactDelegate = self;
+    self.physicsWorld.gravity = CGVectorMake(0, -1);
     
     // create our paddle and add it to the scene (node tree)
     paddle = [Paddle paddle];
@@ -140,10 +141,7 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     [self setUpBallCategories];
     
     ballRect = CGRectMake(ball.position.x, ball.position.y, 100, 100);
-    paddleRect = CGRectMake(paddle.position.x, paddle.position.y, 100, 90);
-    rightBarrierRect = CGRectMake(rightBarrier.position.x, rightBarrier.position.y, 200, 850);
-    leftBarrierRect = CGRectMake(leftBarrier.position.x, leftBarrier.position.y, 30, 850);
-    topBarrierRect = CGRectMake(topBarrier.position.x, topBarrier.position.y, 513, 30);
+    paddleRect = CGRectMake(paddle.position.x, paddle.position.y, 100, 100);
 }
 
 -(void)setUpBallCategories
@@ -151,14 +149,15 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     // setting up ball categories
     ball.physicsBody.categoryBitMask = ballCategory;
     ball.physicsBody.contactTestBitMask = paddleCategory;
+    ball.physicsBody.collisionBitMask = barrierCategory;
     
     paddle.physicsBody.categoryBitMask = paddleCategory;
-    paddle.physicsBody.contactTestBitMask = ballCategory;
+    paddle.physicsBody.collisionBitMask = ballCategory;
     
     rightBarrier.physicsBody.categoryBitMask = barrierCategory;
-    rightBarrier.physicsBody.contactTestBitMask = ballCategory;
     
     topBarrier.physicsBody.categoryBitMask = barrierCategory;
+    
     leftBarrier.physicsBody.categoryBitMask = barrierCategory;
     
     gameOverBarrier.physicsBody.categoryBitMask = barrierCategory;
@@ -203,7 +202,7 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     // this removes the tap to start label when the game starts
     [[scene childNodeWithName:@"tapToBeginLabel"] removeFromParent];
     
-  //  [ball move:5 withDeltaY:10];
+    ball.physicsBody.affectedByGravity = YES;
     
 }
 
@@ -346,19 +345,13 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
         secondBody = contact.bodyA;
     }
     
-    if ((firstBody.categoryBitMask & ballCategory) != 0 && (secondBody.categoryBitMask & paddleCategory) != 0)
-    {
-        if (CGRectIntersectsRect(ballRect, paddleRect))
-        {
-            [ball move:5 withDeltaY:10];
-            NSLog(@"?");
+    if ((firstBody.categoryBitMask & ballCategory) != 0 && (secondBody.categoryBitMask & paddleCategory) != 0) {
+        
+        if (CGRectIntersectsRect(ballRect, paddleRect)) {
+            [ball.physicsBody applyImpulse:CGVectorMake(20, 40)];
         }
     }
     
-    else if ((firstBody.categoryBitMask & barrierCategory) != 1 && (secondBody.categoryBitMask & ballCategory) != 1)
-    {
-    
-    }
 }
  
 // this animates the pulsing effect of the tapToBegin/Reset labels

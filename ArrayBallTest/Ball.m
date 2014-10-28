@@ -33,7 +33,9 @@
     ball.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:ball.frame.size.width/2];
 
     // this literally makes the ball unaffected by gravity
-   // ball.physicsBody.affectedByGravity = NO;
+    ball.physicsBody.affectedByGravity = NO;
+    
+    ball.physicsBody.restitution = 1.0f;
     
     return ball;
 }
