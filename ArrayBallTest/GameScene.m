@@ -34,10 +34,12 @@
 // this is a score label
 @property SKLabelNode* deathLabel;
 
+@property NSTimeInterval timeOfLastImpulse;
+@property NSTimeInterval timePerMove;
+
 @end
 
 @implementation GameScene
-
 
 {
     // set our paddle to be global
@@ -47,10 +49,19 @@
     SKNode *scene;
     
     // set our ball to be global
-    Ball *ball, *ball2, *ball3;
+    Ball *ball, *ball2;
     
-    Barriers *rightBarrier, *topBarrier, *leftBarrier;
+    Barriers *rightBarrier, *topBarrier, *leftBarrier, *gameOverBarrier;
+    
+    CGRect ballRect;
+    CGRect paddleRect, rightBarrierRect, topBarrierRect, leftBarrierRect;
 }
+
+// set up all of the categories here
+static const uint32_t ballCategory = 0x1 << 0;
+static const uint32_t paddleCategory = 0x1 << 1;
+static const uint32_t barrierCategory = 0x1 << 2;
+static const uint32_t gameOverBarrierCategory = 0x1 << 3;
 
 @synthesize sounds, score, deathLabel;
 
@@ -90,7 +101,7 @@
     topBarrier = [Barriers topBarrier];
     leftBarrier = [Barriers leftBarrier];
     rightBarrier = [Barriers rightBarrier];
-    Barriers *gameOverBarrier = [Barriers gameOverBarrier];
+    gameOverBarrier = [Barriers gameOverBarrier];
     
     // add them to the scene
     [scene addChild:topBarrier];
@@ -125,8 +136,34 @@
     self.deathLabel.fontColor = [SKColor blackColor];
     self.deathLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
     [scene addChild:self.deathLabel];
+    
+    [self setUpBallCategories];
+    
+    ballRect = CGRectMake(ball.position.x, ball.position.y, 100, 100);
+    paddleRect = CGRectMake(paddle.position.x, paddle.position.y, 100, 90);
+    rightBarrierRect = CGRectMake(rightBarrier.position.x, rightBarrier.position.y, 200, 850);
+    leftBarrierRect = CGRectMake(leftBarrier.position.x, leftBarrier.position.y, 30, 850);
+    topBarrierRect = CGRectMake(topBarrier.position.x, topBarrier.position.y, 513, 30);
 }
 
+-(void)setUpBallCategories
+{
+    // setting up ball categories
+    ball.physicsBody.categoryBitMask = ballCategory;
+    ball.physicsBody.contactTestBitMask = paddleCategory;
+    
+    paddle.physicsBody.categoryBitMask = paddleCategory;
+    paddle.physicsBody.contactTestBitMask = ballCategory;
+    
+    rightBarrier.physicsBody.categoryBitMask = barrierCategory;
+    rightBarrier.physicsBody.contactTestBitMask = ballCategory;
+    
+    topBarrier.physicsBody.categoryBitMask = barrierCategory;
+    leftBarrier.physicsBody.categoryBitMask = barrierCategory;
+    
+    gameOverBarrier.physicsBody.categoryBitMask = barrierCategory;
+}
+ 
 // this creates the button that moves our paddle left
 -(SKSpriteNode *)leftButton
 {
@@ -166,9 +203,8 @@
     // this removes the tap to start label when the game starts
     [[scene childNodeWithName:@"tapToBeginLabel"] removeFromParent];
     
+  //  [ball move:5 withDeltaY:10];
     
-    // start moving ball
-    [ball move:5 withDeltaY:10];
 }
 
 // called when a ball reaches the bottom of the screen
@@ -299,49 +335,32 @@
 
 -(void)didBeginContact:(SKPhysicsContact *)contact
 {
+    SKPhysicsBody *firstBody, *secondBody;
     
-    
-     
-    // if the ball makes contact with the right barrier
-    // move the ball to the left
-    if ([contact.bodyA.node.name isEqualToString:@"rightBarrier"] || [contact.bodyB.node.name isEqualToString:@"rightBarrier"]) {
-        [ball move:-15 withDeltaY:0];
-        [self.sounds playBarrierSound];
-   }
-    
-    // if the ball makes contact with the left barrier
-    // move the ball to the right
-    else if ([contact.bodyA.node.name isEqualToString:@"leftBarrier"] || [contact.bodyB.node.name isEqualToString:@"leftBarrier"]) {
-        [ball move:15 withDeltaY:0];
-        [self.sounds playBarrierSound];
+    if (contact.bodyA.categoryBitMask < contact.bodyB.categoryBitMask) {
+        firstBody = contact.bodyA;
+        secondBody = contact.bodyB;
+    }
+    else {
+        firstBody = contact.bodyB;
+        secondBody = contact.bodyA;
     }
     
-    // if the ball makes contact with the top barrier
-    // move the ball down
-    else if ([contact.bodyA.node.name isEqualToString:@"topBarrier"] || [contact.bodyB.node.name isEqualToString:@"topBarrier"]) {
-        [ball move:0 withDeltaY:-20];
-        [self.sounds playBarrierSound];
+    if ((firstBody.categoryBitMask & ballCategory) != 0 && (secondBody.categoryBitMask & paddleCategory) != 0)
+    {
+        if (CGRectIntersectsRect(ballRect, paddleRect))
+        {
+            [ball move:5 withDeltaY:10];
+            NSLog(@"?");
+        }
     }
     
-    else if ([contact.bodyA.node.name isEqualToString:@"gameOverBarrier"] || [contact.bodyB.node.name isEqualToString:@"gameOverBarrier"]) {
-        [self gameOver];
-    }
-   
-    // if the ball makes contact with the paddle
-    // move the ball up and change the color of the paddle
-    else if ([contact.bodyA.node.name isEqualToString:@"ball"] || [contact.bodyB.node.name isEqualToString:@"ball"] ) {
-        [paddle setColor:[paddle getRandomColor]];
-        [ball move:0 withDeltaY:20];
-        
-        self.score++;
-        
-        self.deathLabel.text = [NSString stringWithFormat:@"%i", self.score];
-        
-        [self.sounds playPaddleSound];
-
+    else if ((firstBody.categoryBitMask & barrierCategory) != 1 && (secondBody.categoryBitMask & ballCategory) != 1)
+    {
+    
     }
 }
-
+ 
 // this animates the pulsing effect of the tapToBegin/Reset labels
 -(void)animateWithPulse:(SKNode *)node
 {

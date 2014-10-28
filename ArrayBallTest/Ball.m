@@ -17,10 +17,6 @@
 
 @implementation Ball
 
-// set up categories
-static const uint32_t ballCategory = 0x1 << 0;
-static const uint32_t barrierCategory = 0x1 << 1;
-
 // return our ball
 +(id)ball
 {
@@ -34,16 +30,10 @@ static const uint32_t barrierCategory = 0x1 << 1;
     ball.name = @"ball";
     
     // give the ball a physics body
-    ball.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:ball.size];
+    ball.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:ball.frame.size.width/2];
 
-    // set up categoryBitMask for collision detection
-    ball.physicsBody.categoryBitMask = ballCategory;
-    
-    // allows ball to make contact with barriers
-    ball.physicsBody.contactTestBitMask = barrierCategory;
-    
     // this literally makes the ball unaffected by gravity
-    ball.physicsBody.affectedByGravity = NO;
+   // ball.physicsBody.affectedByGravity = NO;
     
     return ball;
 }

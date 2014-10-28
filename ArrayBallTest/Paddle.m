@@ -9,8 +9,6 @@
 #import "Paddle.h"
 
 @implementation Paddle
-static const uint32_t ballCategory = 0x1 << 0;
-static const uint32_t paddleCategory = 0x1 << 2;
 
 // factory method to return our paddle
 +(id)paddle
@@ -30,9 +28,6 @@ static const uint32_t paddleCategory = 0x1 << 2;
     
     // allows our paddle to not be affected by rotational forces from barriers
     paddle.physicsBody.allowsRotation = NO;
-    
-    paddle.physicsBody.categoryBitMask = paddleCategory;
-    paddle.physicsBody.contactTestBitMask = ballCategory;
     
     // 'disable' gravity on the paddle so that it does not fall straight down off the screen
     // read more about 'dynamic' in API
