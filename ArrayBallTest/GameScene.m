@@ -48,17 +48,15 @@
     // set up a node tree to hold our all of our nodes
     SKNode *scene;
     
-    // set our ball to be global
-    Ball *ball, *ball2;
+    // set our balls to be global
+    Ball *ball, *ball2, *ball3, *ball4, *ball5;
     
     Barriers *rightBarrier, *topBarrier, *leftBarrier, *gameOverBarrier;
-    
-    CGRect ballRect;
-    CGRect paddleRect;
 }
 
 // set up all of the categories here
 static const uint32_t ballCategory = 0x1 << 0;
+
 static const uint32_t paddleCategory = 0x1 << 1;
 static const uint32_t barrierCategory = 0x1 << 2;
 static const uint32_t gameOverBarrierCategory = 0x1 << 3;
@@ -97,6 +95,20 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     [scene addChild:ball];
     
     ball2 = [Ball ball];
+    ball2.position = CGPointMake(0, 190);
+    [scene addChild:ball2];
+    
+    ball3 = [Ball ball];
+    ball3.position = CGPointMake(0, 290);
+    [scene addChild:ball3];
+    
+    ball4 = [Ball ball];
+    ball4.position = CGPointMake(0, 340);
+    [scene addChild:ball4];
+                      
+    ball5 = [Ball ball];
+    ball5.position = CGPointMake(0, 450);
+    [scene addChild:ball5];
     
     // create our barriers
     topBarrier = [Barriers topBarrier];
@@ -138,29 +150,42 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     self.deathLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
     [scene addChild:self.deathLabel];
     
-    [self setUpBallCategories];
-    
-    ballRect = CGRectMake(ball.position.x, ball.position.y, 100, 100);
-    paddleRect = CGRectMake(paddle.position.x, paddle.position.y, 100, 100);
+    [self setUpCategories];
 }
 
--(void)setUpBallCategories
+-(void)setUpCategories
 {
     // setting up ball categories
     ball.physicsBody.categoryBitMask = ballCategory;
     ball.physicsBody.contactTestBitMask = paddleCategory;
     ball.physicsBody.collisionBitMask = barrierCategory;
     
-    paddle.physicsBody.categoryBitMask = paddleCategory;
-    paddle.physicsBody.collisionBitMask = ballCategory;
+    ball2.physicsBody.categoryBitMask = ballCategory;
+    ball2.physicsBody.contactTestBitMask = paddleCategory;
+    ball2.physicsBody.collisionBitMask = barrierCategory;
+
+    ball3.physicsBody.categoryBitMask = ballCategory;
+    ball3.physicsBody.contactTestBitMask = paddleCategory;
+    ball3.physicsBody.collisionBitMask = barrierCategory;
     
+    ball4.physicsBody.categoryBitMask = ballCategory;
+    ball4.physicsBody.contactTestBitMask = paddleCategory;
+    ball4.physicsBody.collisionBitMask = barrierCategory;
+    
+    ball5.physicsBody.categoryBitMask = ballCategory;
+    ball5.physicsBody.contactTestBitMask = paddleCategory;
+    ball5.physicsBody.collisionBitMask = barrierCategory;
+    
+    paddle.physicsBody.categoryBitMask = paddleCategory;
+
     rightBarrier.physicsBody.categoryBitMask = barrierCategory;
     
     topBarrier.physicsBody.categoryBitMask = barrierCategory;
     
     leftBarrier.physicsBody.categoryBitMask = barrierCategory;
     
-    gameOverBarrier.physicsBody.categoryBitMask = barrierCategory;
+    gameOverBarrier.physicsBody.categoryBitMask = gameOverBarrierCategory;
+    gameOverBarrier.physicsBody.contactTestBitMask = ballCategory;
 }
  
 // this creates the button that moves our paddle left
@@ -203,16 +228,16 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     [[scene childNodeWithName:@"tapToBeginLabel"] removeFromParent];
     
     ball.physicsBody.affectedByGravity = YES;
-    
+    ball2.physicsBody.affectedByGravity = YES;
+    ball3.physicsBody.affectedByGravity = YES;
+    ball4.physicsBody.affectedByGravity = YES;
+    ball5.physicsBody.affectedByGravity = YES;
 }
 
 // called when a ball reaches the bottom of the screen
 -(void)gameOver
 {
     self.isGameOver = YES;
-    
-    // stop the movement of the ball
-    [ball stopMoving];
     
     // game over label creation
     SKLabelNode *gameOverLabel = [SKLabelNode labelNodeWithFontNamed:@"AmericanTypewriter-Bold"];
@@ -318,6 +343,16 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     }
 }
 
+-(void)move:(int)deltaX withDeltaY:(int)deltaY
+{
+    SKAction *testMoveRight = [SKAction moveByX:deltaX y:deltaY duration:0.03];
+    
+    // this will repeat the action over and over
+    SKAction *move = [SKAction repeatActionForever:testMoveRight];
+    [self runAction:move];
+    
+}
+
 // see comment below
 -(void)update:(CFTimeInterval)currentTime {
     /* Called before each frame is rendered */
@@ -345,11 +380,28 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
         secondBody = contact.bodyA;
     }
     
+    // if a body in the scene makes contact with the paddle
+    // shoot the ball back up
     if ((firstBody.categoryBitMask & ballCategory) != 0 && (secondBody.categoryBitMask & paddleCategory) != 0) {
+        // move ball up
+        [firstBody applyImpulse:CGVectorMake(arc4random() % 60 + 20, arc4random() % 80 + 50)];
         
-        if (CGRectIntersectsRect(ballRect, paddleRect)) {
-            [ball.physicsBody applyImpulse:CGVectorMake(20, 40)];
-        }
+        // change paddle color
+        [paddle setColor:[paddle getRandomColor]];
+        
+        // increment score
+        self.score++;
+        
+        // update score
+        self.deathLabel.text = [NSString stringWithFormat:@"%i", self.score];
+        
+        // play paddle sound
+        [self.sounds playPaddleSound];
+    }
+    
+    else if ((firstBody.categoryBitMask & ballCategory) != 0 && (secondBody.categoryBitMask & gameOverBarrierCategory) != 0) {
+        [self gameOver];
+        paddle.physicsBody.categoryBitMask = 0;
     }
     
 }

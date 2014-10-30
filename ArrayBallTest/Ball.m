@@ -35,7 +35,8 @@
     // this literally makes the ball unaffected by gravity
     ball.physicsBody.affectedByGravity = NO;
     
-    ball.physicsBody.restitution = 1.0f;
+    // this checks to see how bouncy the ball is (0 being not bouncy, 1 being very bouncy)
+    ball.physicsBody.restitution = 0.5;
     
     return ball;
 }
