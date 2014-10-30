@@ -16,5 +16,5 @@
 -(void)movePaddleLeft:(int)speed;
 -(void)movePaddleRight:(int)speed;
 -(void)stopMoving;
--(UIColor *)getRandomColor;
+//-(UIColor *)getRandomColor;
 @end

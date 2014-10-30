@@ -33,7 +33,7 @@
     ball.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:ball.frame.size.width/2];
 
     // this literally makes the ball unaffected by gravity
-    ball.physicsBody.affectedByGravity = NO;
+    ball.physicsBody.affectedByGravity = YES;
     
     // this checks to see how bouncy the ball is (0 being not bouncy, 1 being very bouncy)
     ball.physicsBody.restitution = 0.5;

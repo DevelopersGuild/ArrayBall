@@ -11,7 +11,10 @@
 #import "Paddle.h"
 #import "Ball.h"
 #import "Barriers.h"
-#import "Sounds.h"
+
+// this gets us access to the AVAudioPlayer class
+// which we use to play the game music
+#import <AVFoundation/AVFoundation.h>
 
 // set up property to hold the speed of the ball here
 
@@ -21,14 +24,14 @@
 // checks to see if the game is over
 @property BOOL isGameOver;
 
+@property SKAction *gameMusic;
+
 // this checks if the user is touching
 @property BOOL isTouching;
 // this checks if the paddle is moving left
 @property BOOL movingLeft;
 // this checks if the paddle is moving right
 @property BOOL movingRight;
-// this is an object of a Sound class
-@property Sounds *sounds;
 // this is a score variable
 @property int score;
 // this is a score label
@@ -48,10 +51,13 @@
     // set up a node tree to hold our all of our nodes
     SKNode *scene;
     
-    // set our balls to be global
-    Ball *ball, *ball2, *ball3, *ball4, *ball5;
+    // first ball needs to be global
+    Ball *ball;
     
     Barriers *rightBarrier, *topBarrier, *leftBarrier, *gameOverBarrier;
+    
+    // this will play the game music
+    AVAudioPlayer *gameMusic, *gameOverMusic, *paddleSound;
 }
 
 // set up all of the categories here
@@ -61,7 +67,7 @@ static const uint32_t paddleCategory = 0x1 << 1;
 static const uint32_t barrierCategory = 0x1 << 2;
 static const uint32_t gameOverBarrierCategory = 0x1 << 3;
 
-@synthesize sounds, score, deathLabel;
+@synthesize score, deathLabel;
 
 //static const uint32_t barrierCategory = 0x1 << 1;
 
@@ -70,9 +76,31 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     
     // set up our node tree
     
+    [self removeAllChildren];
+    [self removeAllActions];
+    [scene removeAllActions];
+    [scene removeAllChildren];
+    
     scene = [SKNode node];
     [self addChild:scene];
     
+    // create game background
+    SKSpriteNode *spaceBackground = [SKSpriteNode spriteNodeWithImageNamed:@"space"];
+    spaceBackground.position = CGPointMake(0, 300);
+    [scene addChild:spaceBackground];
+    
+    // initialize game music player
+    NSURL *urlMusic = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"ArrayBallMusic" ofType:@"mp3"]];
+    gameMusic = [[AVAudioPlayer alloc] initWithContentsOfURL:urlMusic error:nil];
+    
+    // initialize game over music
+    NSURL *urlOver = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"GameOverMusic" ofType:@"mp3"]];
+    gameOverMusic = [[AVAudioPlayer alloc] initWithContentsOfURL:urlOver error:nil];
+    
+    // initialize paddle sound
+    NSURL *urlPaddle = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"paddleSound" ofType:@"wav"]];
+    paddleSound = [[AVAudioPlayer alloc] initWithContentsOfURL:urlPaddle error:nil];
+
     // set the background color to white
     self.backgroundColor = [SKColor colorWithRed:1.0 green:1.0 blue:1.0 alpha:1.0];
     
@@ -92,23 +120,8 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     
     // create our ball and add it to the scene
     ball = [Ball ball];
+    ball.physicsBody.affectedByGravity = NO;
     [scene addChild:ball];
-    
-    ball2 = [Ball ball];
-    ball2.position = CGPointMake(0, 190);
-    [scene addChild:ball2];
-    
-    ball3 = [Ball ball];
-    ball3.position = CGPointMake(0, 290);
-    [scene addChild:ball3];
-    
-    ball4 = [Ball ball];
-    ball4.position = CGPointMake(0, 340);
-    [scene addChild:ball4];
-                      
-    ball5 = [Ball ball];
-    ball5.position = CGPointMake(0, 450);
-    [scene addChild:ball5];
     
     // create our barriers
     topBarrier = [Barriers topBarrier];
@@ -138,15 +151,12 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     [scene addChild:tapToBeginLabel];
     [self animateWithPulse:tapToBeginLabel];
     
-    // allocating sounds object
-    self.sounds = [[Sounds alloc]init];
-    
     // properites of a score label
     self.deathLabel = [SKLabelNode labelNodeWithFontNamed:@"CoolveticaRg-Regular"];
-    self.deathLabel.fontSize = 48;
+    self.deathLabel.fontSize = 50;
     self.deathLabel.text = [NSString stringWithFormat:@"%i",self.score];
     self.deathLabel.position = CGPointMake(150, 600);
-    self.deathLabel.fontColor = [SKColor blackColor];
+    self.deathLabel.fontColor = [SKColor greenColor];
     self.deathLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
     [scene addChild:self.deathLabel];
     
@@ -159,22 +169,6 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     ball.physicsBody.categoryBitMask = ballCategory;
     ball.physicsBody.contactTestBitMask = paddleCategory;
     ball.physicsBody.collisionBitMask = barrierCategory;
-    
-    ball2.physicsBody.categoryBitMask = ballCategory;
-    ball2.physicsBody.contactTestBitMask = paddleCategory;
-    ball2.physicsBody.collisionBitMask = barrierCategory;
-
-    ball3.physicsBody.categoryBitMask = ballCategory;
-    ball3.physicsBody.contactTestBitMask = paddleCategory;
-    ball3.physicsBody.collisionBitMask = barrierCategory;
-    
-    ball4.physicsBody.categoryBitMask = ballCategory;
-    ball4.physicsBody.contactTestBitMask = paddleCategory;
-    ball4.physicsBody.collisionBitMask = barrierCategory;
-    
-    ball5.physicsBody.categoryBitMask = ballCategory;
-    ball5.physicsBody.contactTestBitMask = paddleCategory;
-    ball5.physicsBody.collisionBitMask = barrierCategory;
     
     paddle.physicsBody.categoryBitMask = paddleCategory;
 
@@ -223,15 +217,13 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
 -(void)start
 {
     self.isStarted = YES;
+    ball.physicsBody.affectedByGravity = YES;
     
     // this removes the tap to start label when the game starts
     [[scene childNodeWithName:@"tapToBeginLabel"] removeFromParent];
     
-    ball.physicsBody.affectedByGravity = YES;
-    ball2.physicsBody.affectedByGravity = YES;
-    ball3.physicsBody.affectedByGravity = YES;
-    ball4.physicsBody.affectedByGravity = YES;
-    ball5.physicsBody.affectedByGravity = YES;
+    // play game music
+    [gameMusic play];
 }
 
 // called when a ball reaches the bottom of the screen
@@ -253,7 +245,7 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     SKLabelNode *tapToResetLabel = [SKLabelNode labelNodeWithFontNamed:@"AmericanTypewriter-Bold"];
     tapToResetLabel.name = @"tapToResetLabel";
     tapToResetLabel.text = @"Tap to reset!";
-    tapToResetLabel.color = [UIColor blackColor];
+    tapToResetLabel.color = [UIColor purpleColor];
     tapToResetLabel.colorBlendFactor = 1.0;
     tapToResetLabel.fontSize = 30.0;
     tapToResetLabel.position = CGPointMake(0, 150);
@@ -265,6 +257,13 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
 // this will only be called when game is over
 -(void)restartGame
 {
+    for (SKNode* node in scene.children) {
+        [node removeFromParent];
+        [node removeAllActions];
+    }
+    
+    [gameOverMusic stop];
+    
     // create a new gamescene
     GameScene *newScene = [[GameScene alloc] initWithSize:self.frame.size];
     
@@ -343,14 +342,17 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     }
 }
 
--(void)move:(int)deltaX withDeltaY:(int)deltaY
+// this method adds a new ball to the game when needed
+-(void)addBall
 {
-    SKAction *testMoveRight = [SKAction moveByX:deltaX y:deltaY duration:0.03];
+    Ball *newBall = [Ball ball];
+    newBall.position = CGPointMake(0, 190);
     
-    // this will repeat the action over and over
-    SKAction *move = [SKAction repeatActionForever:testMoveRight];
-    [self runAction:move];
+    newBall.physicsBody.categoryBitMask = ballCategory;
+    newBall.physicsBody.contactTestBitMask = paddleCategory;
+    newBall.physicsBody.collisionBitMask = barrierCategory;
     
+    [scene addChild:newBall];
 }
 
 // see comment below
@@ -386,24 +388,36 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
         // move ball up
         [firstBody applyImpulse:CGVectorMake(arc4random() % 60 + 20, arc4random() % 80 + 50)];
         
-        // change paddle color
-        [paddle setColor:[paddle getRandomColor]];
-        
         // increment score
         self.score++;
-        
+    
         // update score
         self.deathLabel.text = [NSString stringWithFormat:@"%i", self.score];
         
+        // if the score is divisible by 5
+        // add another ball using an action perform selector
+        if (self.score % 5 == 0 && self.score != 0) {
+            [scene runAction:[SKAction performSelector:@selector(addBall) onTarget:self]];
+        }
+        
         // play paddle sound
-        [self.sounds playPaddleSound];
+        [paddleSound play];
     }
     
+    // if a ball hits the game over barrier below the paddle
+    // the game is over
     else if ((firstBody.categoryBitMask & ballCategory) != 0 && (secondBody.categoryBitMask & gameOverBarrierCategory) != 0) {
+        // stop game music
+        [gameMusic stop];
+        // play game over music
+        [gameOverMusic play];
+        
+        // call game over method
         [self gameOver];
+        
+        // set this so that when the remaining balls fall down, they don't touch the paddle
         paddle.physicsBody.categoryBitMask = 0;
     }
-    
 }
  
 // this animates the pulsing effect of the tapToBegin/Reset labels

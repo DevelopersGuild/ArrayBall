@@ -7,14 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0BCB1EF119F1EE3600DCDA4F /* Sounds.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BCB1EF019F1EE3600DCDA4F /* Sounds.m */; };
 		0BCB1EF319F1EE7000DCDA4F /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0BCB1EF219F1EE7000DCDA4F /* AudioToolbox.framework */; };
 		68014F1F19F1AA8700F10D1B /* ball.png in Resources */ = {isa = PBXBuildFile; fileRef = 68014F1E19F1AA8700F10D1B /* ball.png */; };
 		6808211019EB29C900BB59E6 /* Barriers.m in Sources */ = {isa = PBXBuildFile; fileRef = 6808210F19EB29C900BB59E6 /* Barriers.m */; };
+		6834EA581A02D8E200F16192 /* space.png in Resources */ = {isa = PBXBuildFile; fileRef = 6834EA571A02D8E200F16192 /* space.png */; };
+		6834EA5A1A02DB1400F16192 /* paddle.png in Resources */ = {isa = PBXBuildFile; fileRef = 6834EA591A02DB1400F16192 /* paddle.png */; };
+		6834EA5C1A02DE9200F16192 /* ArrayBallMusic.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 6834EA5B1A02DE9200F16192 /* ArrayBallMusic.mp3 */; };
+		6834EA5E1A02ECC500F16192 /* GameOverMusic.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 6834EA5D1A02ECC500F16192 /* GameOverMusic.mp3 */; };
+		6834EA611A02EFF100F16192 /* paddleSound.wav in Resources */ = {isa = PBXBuildFile; fileRef = 6834EA601A02EFF100F16192 /* paddleSound.wav */; };
 		6892280319E86C8700C52DC4 /* Ball.m in Sources */ = {isa = PBXBuildFile; fileRef = 6892280219E86C8700C52DC4 /* Ball.m */; };
 		68AE75B619F1C9DA003C00DD /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 68AE75B419F1C9DA003C00DD /* .gitignore */; };
-		68CA01A119F2FDC600FC261E /* b1.wav in Resources */ = {isa = PBXBuildFile; fileRef = 68CA01A019F2FDC600FC261E /* b1.wav */; };
-		68CA01A319F2FDD100FC261E /* b2.wav in Resources */ = {isa = PBXBuildFile; fileRef = 68CA01A219F2FDD100FC261E /* b2.wav */; };
 		68D726C719E47B120016F525 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 68D726C619E47B120016F525 /* main.m */; };
 		68D726CA19E47B120016F525 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 68D726C919E47B120016F525 /* AppDelegate.m */; };
 		68D726CD19E47B120016F525 /* GameScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 68D726CC19E47B120016F525 /* GameScene.m */; };
@@ -38,17 +40,18 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0BCB1EEF19F1EE3600DCDA4F /* Sounds.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Sounds.h; sourceTree = "<group>"; };
-		0BCB1EF019F1EE3600DCDA4F /* Sounds.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Sounds.m; sourceTree = "<group>"; };
 		0BCB1EF219F1EE7000DCDA4F /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		68014F1E19F1AA8700F10D1B /* ball.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ball.png; sourceTree = "<group>"; };
 		6808210E19EB29C900BB59E6 /* Barriers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Barriers.h; sourceTree = "<group>"; };
 		6808210F19EB29C900BB59E6 /* Barriers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Barriers.m; sourceTree = "<group>"; };
+		6834EA571A02D8E200F16192 /* space.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = space.png; sourceTree = "<group>"; };
+		6834EA591A02DB1400F16192 /* paddle.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = paddle.png; sourceTree = "<group>"; };
+		6834EA5B1A02DE9200F16192 /* ArrayBallMusic.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = ArrayBallMusic.mp3; sourceTree = "<group>"; };
+		6834EA5D1A02ECC500F16192 /* GameOverMusic.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = GameOverMusic.mp3; sourceTree = "<group>"; };
+		6834EA601A02EFF100F16192 /* paddleSound.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = paddleSound.wav; sourceTree = "<group>"; };
 		6892280119E86C8700C52DC4 /* Ball.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Ball.h; sourceTree = "<group>"; };
 		6892280219E86C8700C52DC4 /* Ball.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Ball.m; sourceTree = "<group>"; };
 		68AE75B419F1C9DA003C00DD /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
-		68CA01A019F2FDC600FC261E /* b1.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = b1.wav; sourceTree = "<group>"; };
-		68CA01A219F2FDD100FC261E /* b2.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = b2.wav; sourceTree = "<group>"; };
 		68D726C119E47B120016F525 /* ArrayBallTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ArrayBallTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		68D726C519E47B120016F525 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		68D726C619E47B120016F525 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -120,8 +123,6 @@
 				6892280219E86C8700C52DC4 /* Ball.m */,
 				6808210E19EB29C900BB59E6 /* Barriers.h */,
 				6808210F19EB29C900BB59E6 /* Barriers.m */,
-				0BCB1EEF19F1EE3600DCDA4F /* Sounds.h */,
-				0BCB1EF019F1EE3600DCDA4F /* Sounds.m */,
 				68D726CE19E47B120016F525 /* GameScene.sks */,
 				68D726D019E47B120016F525 /* GameViewController.h */,
 				68D726D119E47B120016F525 /* GameViewController.m */,
@@ -136,9 +137,12 @@
 		68D726C419E47B120016F525 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				68CA01A019F2FDC600FC261E /* b1.wav */,
-				68CA01A219F2FDD100FC261E /* b2.wav */,
+				6834EA5B1A02DE9200F16192 /* ArrayBallMusic.mp3 */,
+				6834EA5D1A02ECC500F16192 /* GameOverMusic.mp3 */,
+				6834EA601A02EFF100F16192 /* paddleSound.wav */,
 				68014F1E19F1AA8700F10D1B /* ball.png */,
+				6834EA591A02DB1400F16192 /* paddle.png */,
+				6834EA571A02D8E200F16192 /* space.png */,
 				68D726C519E47B120016F525 /* Info.plist */,
 				68D726C619E47B120016F525 /* main.m */,
 			);
@@ -243,14 +247,17 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				68CA01A119F2FDC600FC261E /* b1.wav in Resources */,
+				6834EA5A1A02DB1400F16192 /* paddle.png in Resources */,
+				6834EA5C1A02DE9200F16192 /* ArrayBallMusic.mp3 in Resources */,
+				6834EA581A02D8E200F16192 /* space.png in Resources */,
 				68D726DA19E47B120016F525 /* LaunchScreen.xib in Resources */,
 				68014F1F19F1AA8700F10D1B /* ball.png in Resources */,
 				68D726D719E47B120016F525 /* Images.xcassets in Resources */,
 				68D726CF19E47B120016F525 /* GameScene.sks in Resources */,
 				68AE75B619F1C9DA003C00DD /* .gitignore in Resources */,
+				6834EA611A02EFF100F16192 /* paddleSound.wav in Resources */,
 				68D726D519E47B120016F525 /* Main.storyboard in Resources */,
-				68CA01A319F2FDD100FC261E /* b2.wav in Resources */,
+				6834EA5E1A02ECC500F16192 /* GameOverMusic.mp3 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -275,7 +282,6 @@
 				68D726F119E47B7C0016F525 /* Paddle.m in Sources */,
 				68D726CD19E47B120016F525 /* GameScene.m in Sources */,
 				68D726C719E47B120016F525 /* main.m in Sources */,
-				0BCB1EF119F1EE3600DCDA4F /* Sounds.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -14,7 +14,7 @@
 +(id)paddle
 {
     // create a black rectangle to represent our paddle
-    Paddle *paddle = [Paddle spriteNodeWithColor:[UIColor blackColor] size:CGSizeMake(90, 15)];
+    Paddle *paddle = [Paddle spriteNodeWithImageNamed:@"paddle"];
     
     // set paddle name property
     paddle.name = @"paddle";
@@ -66,6 +66,7 @@
 
 // obtains a random color that will change the color of the paddle
 // if the ball makes contact with the paddle
+/*
 -(UIColor *)getRandomColor
 {
     int rand = arc4random() % 6;
@@ -103,5 +104,6 @@
     
     return color;
 }
+ */
 
 @end
