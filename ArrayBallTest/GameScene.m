@@ -11,6 +11,8 @@
 #import "Paddle.h"
 #import "Ball.h"
 #import "Barriers.h"
+#import "PointsLabel.h"
+#import "PowerUp.h"
 
 // this gets us access to the AVAudioPlayer class
 // which we use to play the game music
@@ -26,6 +28,9 @@
 
 @property SKAction *gameMusic;
 
+// checks to see how many balls are present
+@property int ballCounter;
+
 // this checks if the user is touching
 @property BOOL isTouching;
 // this checks if the paddle is moving left
@@ -34,8 +39,8 @@
 @property BOOL movingRight;
 // this is a score variable
 @property int score;
-// this is a score label
-@property SKLabelNode* deathLabel;
+
+@property int lives;
 
 @property NSTimeInterval timeOfLastImpulse;
 @property NSTimeInterval timePerMove;
@@ -53,11 +58,18 @@
     
     // first ball needs to be global
     Ball *ball;
-    
+
+    // game barriers
     Barriers *rightBarrier, *topBarrier, *leftBarrier, *gameOverBarrier;
     
     // this will play the game music
     AVAudioPlayer *gameMusic, *gameOverMusic, *paddleSound;
+    
+    // score labels
+    PointsLabel *scoreLabel, *highScoreLabel;
+    
+    // lives label
+    SKLabelNode *lifeLabel;
 }
 
 // set up all of the categories here
@@ -67,7 +79,7 @@ static const uint32_t paddleCategory = 0x1 << 1;
 static const uint32_t barrierCategory = 0x1 << 2;
 static const uint32_t gameOverBarrierCategory = 0x1 << 3;
 
-@synthesize score, deathLabel;
+@synthesize score;
 
 //static const uint32_t barrierCategory = 0x1 << 1;
 
@@ -117,11 +129,14 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     
     // setting score to 0
     self.score = 0;
+    self.ballCounter = 0;
     
     // create our ball and add it to the scene
     ball = [Ball ball];
     ball.physicsBody.affectedByGravity = NO;
     [scene addChild:ball];
+    
+    self.ballCounter = 1;
     
     // create our barriers
     topBarrier = [Barriers topBarrier];
@@ -138,7 +153,6 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     // add the buttons to the scene
     [scene addChild:[self leftButton]];
     [scene addChild:[self rightButton]];
-    [scene addChild:[self resetButton]];
     
     // add the tapToBegin label
     SKLabelNode *tapToBeginLabel = [SKLabelNode labelNodeWithFontNamed:@"AmericanTypewriter-Bold"];
@@ -151,16 +165,46 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     [scene addChild:tapToBeginLabel];
     [self animateWithPulse:tapToBeginLabel];
     
-    // properites of a score label
-    self.deathLabel = [SKLabelNode labelNodeWithFontNamed:@"CoolveticaRg-Regular"];
-    self.deathLabel.fontSize = 50;
-    self.deathLabel.text = [NSString stringWithFormat:@"%i",self.score];
-    self.deathLabel.position = CGPointMake(150, 600);
-    self.deathLabel.fontColor = [SKColor greenColor];
-    self.deathLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
-    [scene addChild:self.deathLabel];
+    [self loadScoreLabels];
     
     [self setUpCategories];
+}
+
+-(void)loadScoreLabels
+{
+    // properites of a score label
+    scoreLabel = [PointsLabel pointsLabelWithFontNamed:@"CoolveticaRg-Regular"];
+    scoreLabel.fontSize = 50;
+    scoreLabel.name = @"scoreLabel";
+    scoreLabel.position = CGPointMake(150, 600);
+    scoreLabel.fontColor = [SKColor greenColor];
+    scoreLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
+    [scene addChild:scoreLabel];
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    
+    NSInteger *retrievedScore  = [defaults integerForKey:@"highScoreLabel"];
+    
+    highScoreLabel = [PointsLabel pointsLabelWithFontNamed:@"CoolveticaRg-Regular"];
+    highScoreLabel.fontSize = 50;
+    highScoreLabel.name = @"highScoreLabel";
+    highScoreLabel.position = CGPointMake(-150, 600);
+    [highScoreLabel setPoints:retrievedScore];
+    highScoreLabel.fontColor = [SKColor greenColor];
+    highScoreLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
+    [scene addChild:highScoreLabel];
+    
+    // set up number of lives
+    self.lives = 3;
+    
+    lifeLabel = [SKLabelNode labelNodeWithFontNamed:@"CoolveticaRg-Regular"];
+    lifeLabel.fontSize = 50;
+    lifeLabel.name = @"lifeLabel";
+    lifeLabel.position = CGPointMake(0, 600);
+    lifeLabel.text = [NSString stringWithFormat:@"%i", self.lives];
+    [scene addChild:lifeLabel];
+    
+    
 }
 
 -(void)setUpCategories
@@ -191,15 +235,6 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     // Making it invisible
     leftButton.alpha = 0.0;
     return leftButton;
-}
-
-// for testing purposes
--(SKSpriteNode *)resetButton
-{
-    SKSpriteNode *resetButton = [SKSpriteNode spriteNodeWithColor:[UIColor purpleColor] size:CGSizeMake(50,50)];
-    resetButton.name = @"resetButton";
-    resetButton.position = CGPointMake(180, 660);
-    return resetButton;
 }
 
 // this creates the button to move the paddle right
@@ -251,6 +286,8 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     tapToResetLabel.position = CGPointMake(0, 150);
     [scene addChild:tapToResetLabel];
     [self animateWithPulse:tapToResetLabel];
+    
+    [self updateHighScore];
 }
 
 // this is called when everything is to be restarted
@@ -310,13 +347,6 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
             self.movingRight = YES;
             [paddle movePaddleRight:8];
         }
-        
-        else if ([node.name isEqualToString:@"resetButton"]) {
-            GameScene *newScene = [[GameScene alloc] initWithSize:self.frame.size];
-            newScene.scaleMode = SKSceneScaleModeAspectFill;
-            [self.view presentScene:newScene];
-        }
-    
     }
 }
 
@@ -332,13 +362,11 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     // if the user lets go of the left button, stop paddle movement
     if ([node.name isEqualToString:@"leftButton"]) {
         self.movingLeft = NO;
-        [paddle stopMoving];
     }
     
     // if the user lets go of the right button, stop paddle movement
     else if ([node.name isEqualToString:@"rightButton"]) {
         self.movingRight = NO;
-        [paddle stopMoving];
     }
 }
 
@@ -346,13 +374,24 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
 -(void)addBall
 {
     Ball *newBall = [Ball ball];
-    newBall.position = CGPointMake(0, 190);
+    newBall.position = CGPointMake(paddle.position.x, paddle.position.y + 3);
     
     newBall.physicsBody.categoryBitMask = ballCategory;
     newBall.physicsBody.contactTestBitMask = paddleCategory;
     newBall.physicsBody.collisionBitMask = barrierCategory;
     
     [scene addChild:newBall];
+    self.ballCounter++;
+}
+
+-(void)updateHighScore
+{
+    if (scoreLabel.number > highScoreLabel.number) {
+        [highScoreLabel setPoints:scoreLabel.number];
+        
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        [defaults setInteger:highScoreLabel.number forKey:@"highScoreLabel"];
+    }
 }
 
 // see comment below
@@ -360,11 +399,11 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     /* Called before each frame is rendered */
     
     if (self.isTouching && self.movingLeft) {
-        [paddle movePaddleLeft:-8];
+        [paddle movePaddleLeft:-10];
     }
     
     else if (self.isTouching && self.movingRight) {
-        [paddle movePaddleRight:8];
+        [paddle movePaddleRight:10];
     }
     
 }
@@ -386,17 +425,14 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     // shoot the ball back up
     if ((firstBody.categoryBitMask & ballCategory) != 0 && (secondBody.categoryBitMask & paddleCategory) != 0) {
         // move ball up
-        [firstBody applyImpulse:CGVectorMake(40, 80)];
+        [firstBody applyImpulse:CGVectorMake(arc4random() % 20 + 50, arc4random() % 20 + 70)];
         
         // increment score
-        self.score++;
-    
-        // update score
-        self.deathLabel.text = [NSString stringWithFormat:@"%i", self.score];
+        [scoreLabel increment];
         
         // if the score is divisible by 5
         // add another ball using an action perform selector
-        if (self.score % 5 == 0 && self.score != 0) {
+        if (scoreLabel.number % 5 == 0 && scoreLabel.number != 0) {
             [scene runAction:[SKAction performSelector:@selector(addBall) onTarget:self]];
         }
         
@@ -407,16 +443,40 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     // if a ball hits the game over barrier below the paddle
     // the game is over
     else if ((firstBody.categoryBitMask & ballCategory) != 0 && (secondBody.categoryBitMask & gameOverBarrierCategory) != 0) {
-        // stop game music
-        [gameMusic stop];
-        // play game over music
-        [gameOverMusic play];
         
-        // call game over method
-        [self gameOver];
+        // checks to see if the game is over
+        if (!self.isGameOver) {
         
-        // set this so that when the remaining balls fall down, they don't touch the paddle
-        paddle.physicsBody.categoryBitMask = 0;
+            // decrement lives
+            self.lives--;
+        
+            // decrement ball counter
+            self.ballCounter--;
+        
+            // if the user sucks an loses a life when only one ball is present
+            // add in another ball
+            if (self.ballCounter == 0 ) {
+                [scene runAction:[SKAction performSelector:@selector(addBall) onTarget:self]];
+            }
+        
+            // update lives label
+            lifeLabel.text = [NSString stringWithFormat:@"%i", self.lives];
+        }
+        
+        // if the user has 0 lives
+        // the game is over
+        if (self.lives == 0) {
+            // stop game music
+            [gameMusic stop];
+            // play game over music
+            [gameOverMusic play];
+        
+            // call game over method
+            [self gameOver];
+        
+            // set this so that when the remaining balls fall down, they don't touch the paddle
+            paddle.physicsBody.categoryBitMask = 0;
+        }
     }
 }
  
