@@ -386,7 +386,7 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     // shoot the ball back up
     if ((firstBody.categoryBitMask & ballCategory) != 0 && (secondBody.categoryBitMask & paddleCategory) != 0) {
         // move ball up
-        [firstBody applyImpulse:CGVectorMake(arc4random() % 60 + 20, arc4random() % 80 + 50)];
+        [firstBody applyImpulse:CGVectorMake(40, 80)];
         
         // increment score
         self.score++;
