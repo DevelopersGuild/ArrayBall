@@ -15,6 +15,7 @@
 		6834EA5C1A02DE9200F16192 /* ArrayBallMusic.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 6834EA5B1A02DE9200F16192 /* ArrayBallMusic.mp3 */; };
 		6834EA5E1A02ECC500F16192 /* GameOverMusic.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 6834EA5D1A02ECC500F16192 /* GameOverMusic.mp3 */; };
 		6834EA611A02EFF100F16192 /* paddleSound.wav in Resources */ = {isa = PBXBuildFile; fileRef = 6834EA601A02EFF100F16192 /* paddleSound.wav */; };
+		687C604E1A06C99700652E96 /* powerup.png in Resources */ = {isa = PBXBuildFile; fileRef = 687C604D1A06C99700652E96 /* powerup.png */; };
 		6885336F1A043DF50055E8FF /* PowerUp.m in Sources */ = {isa = PBXBuildFile; fileRef = 6885336E1A043DF50055E8FF /* PowerUp.m */; };
 		6892280319E86C8700C52DC4 /* Ball.m in Sources */ = {isa = PBXBuildFile; fileRef = 6892280219E86C8700C52DC4 /* Ball.m */; };
 		68AE75B619F1C9DA003C00DD /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 68AE75B419F1C9DA003C00DD /* .gitignore */; };
@@ -28,6 +29,7 @@
 		68D726DA19E47B120016F525 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 68D726D819E47B120016F525 /* LaunchScreen.xib */; };
 		68D726E619E47B120016F525 /* ArrayBallTestTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 68D726E519E47B120016F525 /* ArrayBallTestTests.m */; };
 		68D726F119E47B7C0016F525 /* Paddle.m in Sources */ = {isa = PBXBuildFile; fileRef = 68D726F019E47B7C0016F525 /* Paddle.m */; };
+		68E7BB311A04CE73007E167C /* Reset.png in Resources */ = {isa = PBXBuildFile; fileRef = 68E7BB301A04CE73007E167C /* Reset.png */; };
 		68F111791A03F4810009E600 /* PointsLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 68F111781A03F4810009E600 /* PointsLabel.m */; };
 /* End PBXBuildFile section */
 
@@ -51,6 +53,7 @@
 		6834EA5B1A02DE9200F16192 /* ArrayBallMusic.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = ArrayBallMusic.mp3; sourceTree = "<group>"; };
 		6834EA5D1A02ECC500F16192 /* GameOverMusic.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = GameOverMusic.mp3; sourceTree = "<group>"; };
 		6834EA601A02EFF100F16192 /* paddleSound.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = paddleSound.wav; sourceTree = "<group>"; };
+		687C604D1A06C99700652E96 /* powerup.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = powerup.png; sourceTree = "<group>"; };
 		6885336D1A043DF50055E8FF /* PowerUp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PowerUp.h; sourceTree = "<group>"; };
 		6885336E1A043DF50055E8FF /* PowerUp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PowerUp.m; sourceTree = "<group>"; };
 		6892280119E86C8700C52DC4 /* Ball.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Ball.h; sourceTree = "<group>"; };
@@ -74,6 +77,7 @@
 		68D726E519E47B120016F525 /* ArrayBallTestTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ArrayBallTestTests.m; sourceTree = "<group>"; };
 		68D726EF19E47B7C0016F525 /* Paddle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Paddle.h; sourceTree = "<group>"; };
 		68D726F019E47B7C0016F525 /* Paddle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Paddle.m; sourceTree = "<group>"; };
+		68E7BB301A04CE73007E167C /* Reset.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Reset.png; sourceTree = "<group>"; };
 		68F111771A03F4810009E600 /* PointsLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PointsLabel.h; sourceTree = "<group>"; };
 		68F111781A03F4810009E600 /* PointsLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PointsLabel.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -152,6 +156,8 @@
 				6834EA601A02EFF100F16192 /* paddleSound.wav */,
 				68014F1E19F1AA8700F10D1B /* ball.png */,
 				6834EA591A02DB1400F16192 /* paddle.png */,
+				687C604D1A06C99700652E96 /* powerup.png */,
+				68E7BB301A04CE73007E167C /* Reset.png */,
 				6834EA571A02D8E200F16192 /* space.png */,
 				68D726C519E47B120016F525 /* Info.plist */,
 				68D726C619E47B120016F525 /* main.m */,
@@ -265,10 +271,12 @@
 				68014F1F19F1AA8700F10D1B /* ball.png in Resources */,
 				68D726D719E47B120016F525 /* Images.xcassets in Resources */,
 				68D726CF19E47B120016F525 /* GameScene.sks in Resources */,
+				687C604E1A06C99700652E96 /* powerup.png in Resources */,
 				68AE75B619F1C9DA003C00DD /* .gitignore in Resources */,
 				6834EA611A02EFF100F16192 /* paddleSound.wav in Resources */,
 				68D726D519E47B120016F525 /* Main.storyboard in Resources */,
 				6834EA5E1A02ECC500F16192 /* GameOverMusic.mp3 in Resources */,
+				68E7BB311A04CE73007E167C /* Reset.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

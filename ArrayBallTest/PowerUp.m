@@ -12,13 +12,9 @@
 
 +(id)powerUp
 {
-    PowerUp *powerUp = [PowerUp spriteNodeWithColor:[UIColor purpleColor] size:CGSizeMake(50, 50)];
-    
-    powerUp.position = CGPointMake(arc4random() % 400 + 1, 300);
+    PowerUp *powerUp = [PowerUp spriteNodeWithImageNamed:@"powerup"];
     
     powerUp.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:powerUp.size];
-    
-    powerUp.physicsBody.dynamic = NO;
     
     return powerUp;
 }

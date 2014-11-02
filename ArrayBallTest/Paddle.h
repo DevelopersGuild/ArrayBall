@@ -15,6 +15,7 @@
 +(id)paddle;
 -(void)movePaddleLeft:(int)speed;
 -(void)movePaddleRight:(int)speed;
--(void)stopMoving;
-//-(UIColor *)getRandomColor;
+
+// paddle power ups
+-(void)grow;
 @end

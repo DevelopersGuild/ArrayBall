@@ -16,8 +16,6 @@
     // create a black rectangle to represent our paddle
     Paddle *paddle = [Paddle spriteNodeWithImageNamed:@"paddle"];
     
-    //Paddle *paddle = [Paddle spriteNodeWithColor:[UIColor blackColor] size:CGSizeMake(80, 15)];
-    
     // set paddle name property
     paddle.name = @"paddle";
     
@@ -59,6 +57,16 @@
     SKAction *moveRight = [SKAction moveByX:self.paddleRightMovementSpeed y:0 duration:0.1];
     
     [self runAction:moveRight];
+}
+
+-(void)grow
+{
+    self.size = CGSizeMake(180, 15);
+    self.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:self.size];
+    self.physicsBody.mass = 5000000;
+    self.physicsBody.allowsRotation = NO;
+    self.physicsBody.dynamic = YES;
+    self.physicsBody.affectedByGravity = NO;
 }
 
 

@@ -78,6 +78,7 @@ static const uint32_t ballCategory = 0x1 << 0;
 static const uint32_t paddleCategory = 0x1 << 1;
 static const uint32_t barrierCategory = 0x1 << 2;
 static const uint32_t gameOverBarrierCategory = 0x1 << 3;
+static const uint32_t powerUpCategory = 0x1 << 4;
 
 @synthesize score;
 
@@ -153,6 +154,7 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     // add the buttons to the scene
     [scene addChild:[self leftButton]];
     [scene addChild:[self rightButton]];
+    [scene addChild:[self resetButton]];
     
     // add the tapToBegin label
     SKLabelNode *tapToBeginLabel = [SKLabelNode labelNodeWithFontNamed:@"AmericanTypewriter-Bold"];
@@ -176,20 +178,20 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     scoreLabel = [PointsLabel pointsLabelWithFontNamed:@"CoolveticaRg-Regular"];
     scoreLabel.fontSize = 50;
     scoreLabel.name = @"scoreLabel";
-    scoreLabel.position = CGPointMake(150, 600);
+    scoreLabel.position = CGPointMake(160, 600);
     scoreLabel.fontColor = [SKColor greenColor];
     scoreLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
     [scene addChild:scoreLabel];
     
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSUserDefaults *defaults2 = [NSUserDefaults standardUserDefaults];
     
-    NSInteger *retrievedScore  = [defaults integerForKey:@"highScoreLabel"];
+    NSInteger *retrievedScore2  = [defaults2 integerForKey:@"highScoreLabel"];
     
     highScoreLabel = [PointsLabel pointsLabelWithFontNamed:@"CoolveticaRg-Regular"];
     highScoreLabel.fontSize = 50;
     highScoreLabel.name = @"highScoreLabel";
-    highScoreLabel.position = CGPointMake(-150, 600);
-    [highScoreLabel setPoints:retrievedScore];
+    highScoreLabel.position = CGPointMake(-120, 600);
+    [highScoreLabel setPoints:retrievedScore2];
     highScoreLabel.fontColor = [SKColor greenColor];
     highScoreLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
     [scene addChild:highScoreLabel];
@@ -223,7 +225,7 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     leftBarrier.physicsBody.categoryBitMask = barrierCategory;
     
     gameOverBarrier.physicsBody.categoryBitMask = gameOverBarrierCategory;
-    gameOverBarrier.physicsBody.contactTestBitMask = ballCategory;
+    gameOverBarrier.physicsBody.contactTestBitMask = ballCategory | powerUpCategory;
 }
  
 // this creates the button that moves our paddle left
@@ -247,6 +249,17 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     rightButton.alpha = 0.0;
     
     return rightButton;
+}
+
+-(SKSpriteNode *)resetButton
+{
+    SKSpriteNode *resetButton = [SKSpriteNode spriteNodeWithImageNamed:@"Reset"];
+    resetButton.size = CGSizeMake(40, 40);
+    resetButton.name = @"resetButton";
+    resetButton.position = CGPointMake(50, 620);
+    resetButton.alpha = 1.0;
+    
+    return resetButton;
 }
 
 -(void)start
@@ -347,6 +360,14 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
             self.movingRight = YES;
             [paddle movePaddleRight:8];
         }
+        
+        else if ([node.name isEqualToString:@"resetButton"]) {
+            GameScene *newScene = [[GameScene alloc] initWithSize:self.frame.size];
+            
+            newScene.scaleMode = SKSceneScaleModeAspectFill;
+            
+            [self.view presentScene:newScene];
+        }
     }
 }
 
@@ -382,6 +403,24 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
     
     [scene addChild:newBall];
     self.ballCounter++;
+}
+
+// this method adds a power up to the game
+-(void)addPowerUp
+{
+    PowerUp *powerUp = [PowerUp powerUp];
+    powerUp.position = CGPointMake(40, 500);
+    
+    powerUp.physicsBody.categoryBitMask = powerUpCategory;
+    powerUp.physicsBody.contactTestBitMask = paddleCategory;
+    powerUp.physicsBody.collisionBitMask = barrierCategory;
+    
+    [scene addChild:powerUp];
+}
+
+-(void)getPowerUp
+{
+    NSLog(@"power up");
 }
 
 -(void)updateHighScore
@@ -436,8 +475,17 @@ static const uint32_t gameOverBarrierCategory = 0x1 << 3;
             [scene runAction:[SKAction performSelector:@selector(addBall) onTarget:self]];
         }
         
+        if (arc4random() % 10 + 1 == 5) {
+            [scene runAction:[SKAction performSelector:@selector(addPowerUp) onTarget:self]];
+        }
+        
         // play paddle sound
         [paddleSound play];
+    }
+    
+    // checks for collision of power up and paddle
+    else if ((firstBody.categoryBitMask & paddleCategory) != 0 && (secondBody.categoryBitMask & powerUpCategory) != 1) {
+        [self getPowerUp];
     }
     
     // if a ball hits the game over barrier below the paddle
