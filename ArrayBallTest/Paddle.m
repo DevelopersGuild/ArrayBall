@@ -9,12 +9,16 @@
 #import "Paddle.h"
 
 @implementation Paddle
+static const uint32_t paddleCategory = 0x1 << 1;
 
 // factory method to return our paddle
 +(id)paddle
 {
     // create a black rectangle to represent our paddle
+    // dimensions: 108x48
     Paddle *paddle = [Paddle spriteNodeWithImageNamed:@"paddle"];
+    
+    paddle.position = CGPointMake(0, 0);
     
     // set paddle name property
     paddle.name = @"paddle";
@@ -37,7 +41,6 @@
     return paddle;
 }
 
-
 // this method will move our paddle to the left
 -(void)movePaddleLeft:(int)speed
 {
@@ -59,15 +62,36 @@
     [self runAction:moveRight];
 }
 
--(void)grow
+-(void)normalPaddle
 {
-    self.size = CGSizeMake(180, 15);
+    self.size = CGSizeMake(108, 48);
     self.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:self.size];
     self.physicsBody.mass = 5000000;
     self.physicsBody.allowsRotation = NO;
     self.physicsBody.dynamic = YES;
     self.physicsBody.affectedByGravity = NO;
+    self.physicsBody.categoryBitMask = paddleCategory;
 }
 
+// power ups
+-(void)grow
+{
+    self.size = CGSizeMake(200, 48);
+    self.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:self.size];
+    
+    // sets the mass of the paddle to a high value so that the ball
+    // does not push it down
+    self.physicsBody.mass = 5000000;
+    
+    // allows our paddle to not be affected by rotational forces from barriers
+    self.physicsBody.allowsRotation = NO;
+    
+    // 'disable' gravity on the paddle so that it does not fall straight down off the screen
+    // read more about 'dynamic' in API
+    self.physicsBody.dynamic = YES;
+    self.physicsBody.affectedByGravity = NO;
+    
+    self.physicsBody.categoryBitMask = paddleCategory;
+}
 
 @end

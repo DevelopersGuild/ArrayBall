@@ -37,13 +37,38 @@
 @property BOOL movingLeft;
 // this checks if the paddle is moving right
 @property BOOL movingRight;
+
+// power up stuff
+
+// checks to see if the user has a power up
+@property BOOL powerUp;
+
+// checks to see if the power up is on screen
+@property BOOL powerUpIsVisible;
+
+// checks to see if the user has received a power up
+@property BOOL powerUpReceived;
+
+// timer used to keep track of how long the user has had a power up
+@property NSTimer *powerUpTimer;
+
+// this holds onto the random power up that is generated
+@property int randomPowerUp;
+
+// this property checks to see if the nuke power up is available
+@property BOOL nukeTime;
+
+// checks to see if the nuke label has been added on screen
+@property BOOL nukeLabelAdded;
+
+// number of seconds for the timer of each power up
+@property int seconds;
+
 // this is a score variable
 @property int score;
 
+// number of lives for the player
 @property int lives;
-
-@property NSTimeInterval timeOfLastImpulse;
-@property NSTimeInterval timePerMove;
 
 @end
 
@@ -53,36 +78,59 @@
     // set our paddle to be global
     Paddle *paddle;
     
+    // vortex object
+    SKSpriteNode *vortex;
+    
+    // force field object
+    SKSpriteNode *forceField;
+    
     // set up a node tree to hold our all of our nodes
     SKNode *scene;
     
     // first ball needs to be global
     Ball *ball;
+    
+    // this array holds our ball
+    // helps to keep track of the number of balls on screen
+    // and can be used for power ups that affect all balls
+    NSMutableArray *ballArray;
 
     // game barriers
     Barriers *rightBarrier, *topBarrier, *leftBarrier, *gameOverBarrier;
     
+    //SKSpriteNode *powerUpBarrier;
+    
     // this will play the game music
-    AVAudioPlayer *gameMusic, *gameOverMusic, *paddleSound;
+    AVAudioPlayer *gameMusic, *gameOverMusic, *paddleSound, *nukeSound, *lifeUp, *forceFieldSound;
     
     // score labels
     PointsLabel *scoreLabel, *highScoreLabel;
     
     // lives label
     SKLabelNode *lifeLabel;
+    
+    // the countdown timer that appears when the user receives the nuke power up
+    SKLabelNode *nukeCountDownLabel;
+    
+    // power up object that the user can collect
+    PowerUp *powerUp;
 }
 
 // set up all of the categories here
 static const uint32_t ballCategory = 0x1 << 0;
-
 static const uint32_t paddleCategory = 0x1 << 1;
 static const uint32_t barrierCategory = 0x1 << 2;
 static const uint32_t gameOverBarrierCategory = 0x1 << 3;
 static const uint32_t powerUpCategory = 0x1 << 4;
+static const uint32_t powerUpNetCategory = 0x1 << 5;
+static const uint32_t forceFieldCategory = 0x1 << 7;
+static const uint32_t powerUpBarrierCategory = 0x1 << 8;
 
 @synthesize score;
 
 //static const uint32_t barrierCategory = 0x1 << 1;
+
+#pragma mark Game Setup
 
 -(void)didMoveToView:(SKView *)view {
     /* Setup your scene here */
@@ -94,28 +142,8 @@ static const uint32_t powerUpCategory = 0x1 << 4;
     [scene removeAllActions];
     [scene removeAllChildren];
     
-    scene = [SKNode node];
-    [self addChild:scene];
-    
-    // create game background
-    SKSpriteNode *spaceBackground = [SKSpriteNode spriteNodeWithImageNamed:@"space"];
-    spaceBackground.position = CGPointMake(0, 300);
-    [scene addChild:spaceBackground];
-    
-    // initialize game music player
-    NSURL *urlMusic = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"ArrayBallMusic" ofType:@"mp3"]];
-    gameMusic = [[AVAudioPlayer alloc] initWithContentsOfURL:urlMusic error:nil];
-    
-    // initialize game over music
-    NSURL *urlOver = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"GameOverMusic" ofType:@"mp3"]];
-    gameOverMusic = [[AVAudioPlayer alloc] initWithContentsOfURL:urlOver error:nil];
-    
-    // initialize paddle sound
-    NSURL *urlPaddle = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"paddleSound" ofType:@"wav"]];
-    paddleSound = [[AVAudioPlayer alloc] initWithContentsOfURL:urlPaddle error:nil];
-
-    // set the background color to white
-    self.backgroundColor = [SKColor colorWithRed:1.0 green:1.0 blue:1.0 alpha:1.0];
+    [self loadObjectsToScreen];
+    [self loadGameSounds];
     
     // set anchor point to be in the middle toward the bottom of the screen
     self.anchorPoint = CGPointMake(0.5, 0.1);
@@ -124,19 +152,35 @@ static const uint32_t powerUpCategory = 0x1 << 4;
     self.physicsWorld.contactDelegate = self;
     self.physicsWorld.gravity = CGVectorMake(0, -1);
     
+    [self loadScoreLabels];
+    
+    [self setUpCategories];
+    
+   // self.powerUp = YES;
+}
+
+-(void)loadObjectsToScreen
+{
+    scene = [SKNode node];
+    [self addChild:scene];
+    
+    // create game background
+    SKSpriteNode *spaceBackground = [SKSpriteNode spriteNodeWithImageNamed:@"space"];
+    spaceBackground.position = CGPointMake(0, 300);
+    [scene addChild:spaceBackground];
+    
     // create our paddle and add it to the scene (node tree)
     paddle = [Paddle paddle];
     [scene addChild:paddle];
     
-    // setting score to 0
-    self.score = 0;
-    self.ballCounter = 0;
+    // create ball array to hold all balls
+    ballArray = [[NSMutableArray alloc] init];
     
     // create our ball and add it to the scene
     ball = [Ball ball];
     ball.physicsBody.affectedByGravity = NO;
     [scene addChild:ball];
-    
+    [ballArray addObject:ball];
     self.ballCounter = 1;
     
     // create our barriers
@@ -145,16 +189,14 @@ static const uint32_t powerUpCategory = 0x1 << 4;
     rightBarrier = [Barriers rightBarrier];
     gameOverBarrier = [Barriers gameOverBarrier];
     
-    // add them to the scene
-    [scene addChild:topBarrier];
-    [scene addChild:leftBarrier];
-    [scene addChild:rightBarrier];
-    [scene addChild:gameOverBarrier];
-    
-    // add the buttons to the scene
-    [scene addChild:[self leftButton]];
-    [scene addChild:[self rightButton]];
-    [scene addChild:[self resetButton]];
+    SKSpriteNode *powerUpBarrier = [SKSpriteNode spriteNodeWithColor:[UIColor blackColor] size:CGSizeMake(1000, 20)];
+    powerUpBarrier.position = CGPointMake(0, 0);
+    powerUpBarrier.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:powerUpBarrier.size];
+    powerUpBarrier.physicsBody.affectedByGravity = NO;
+    powerUpBarrier.physicsBody.dynamic = NO;
+    powerUpBarrier.physicsBody.categoryBitMask = powerUpBarrierCategory;
+    powerUpBarrier.physicsBody.contactTestBitMask = powerUpCategory;
+    [scene addChild:powerUpBarrier];
     
     // add the tapToBegin label
     SKLabelNode *tapToBeginLabel = [SKLabelNode labelNodeWithFontNamed:@"AmericanTypewriter-Bold"];
@@ -167,67 +209,18 @@ static const uint32_t powerUpCategory = 0x1 << 4;
     [scene addChild:tapToBeginLabel];
     [self animateWithPulse:tapToBeginLabel];
     
-    [self loadScoreLabels];
+    // add them to the scene
+    [scene addChild:topBarrier];
+    [scene addChild:leftBarrier];
+    [scene addChild:rightBarrier];
+    [scene addChild:gameOverBarrier];
     
-    [self setUpCategories];
+    // add the buttons to the scene
+    [scene addChild:[self leftButton]];
+    [scene addChild:[self rightButton]];
+    [scene addChild:[self resetButton]];
 }
 
--(void)loadScoreLabels
-{
-    // properites of a score label
-    scoreLabel = [PointsLabel pointsLabelWithFontNamed:@"CoolveticaRg-Regular"];
-    scoreLabel.fontSize = 50;
-    scoreLabel.name = @"scoreLabel";
-    scoreLabel.position = CGPointMake(160, 600);
-    scoreLabel.fontColor = [SKColor greenColor];
-    scoreLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
-    [scene addChild:scoreLabel];
-    
-    NSUserDefaults *defaults2 = [NSUserDefaults standardUserDefaults];
-    
-    NSInteger *retrievedScore2  = [defaults2 integerForKey:@"highScoreLabel"];
-    
-    highScoreLabel = [PointsLabel pointsLabelWithFontNamed:@"CoolveticaRg-Regular"];
-    highScoreLabel.fontSize = 50;
-    highScoreLabel.name = @"highScoreLabel";
-    highScoreLabel.position = CGPointMake(-120, 600);
-    [highScoreLabel setPoints:retrievedScore2];
-    highScoreLabel.fontColor = [SKColor greenColor];
-    highScoreLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
-    [scene addChild:highScoreLabel];
-    
-    // set up number of lives
-    self.lives = 3;
-    
-    lifeLabel = [SKLabelNode labelNodeWithFontNamed:@"CoolveticaRg-Regular"];
-    lifeLabel.fontSize = 50;
-    lifeLabel.name = @"lifeLabel";
-    lifeLabel.position = CGPointMake(0, 600);
-    lifeLabel.text = [NSString stringWithFormat:@"%i", self.lives];
-    [scene addChild:lifeLabel];
-    
-    
-}
-
--(void)setUpCategories
-{
-    // setting up ball categories
-    ball.physicsBody.categoryBitMask = ballCategory;
-    ball.physicsBody.contactTestBitMask = paddleCategory;
-    ball.physicsBody.collisionBitMask = barrierCategory;
-    
-    paddle.physicsBody.categoryBitMask = paddleCategory;
-
-    rightBarrier.physicsBody.categoryBitMask = barrierCategory;
-    
-    topBarrier.physicsBody.categoryBitMask = barrierCategory;
-    
-    leftBarrier.physicsBody.categoryBitMask = barrierCategory;
-    
-    gameOverBarrier.physicsBody.categoryBitMask = gameOverBarrierCategory;
-    gameOverBarrier.physicsBody.contactTestBitMask = ballCategory | powerUpCategory;
-}
- 
 // this creates the button that moves our paddle left
 -(SKSpriteNode *)leftButton
 {
@@ -261,6 +254,93 @@ static const uint32_t powerUpCategory = 0x1 << 4;
     
     return resetButton;
 }
+
+-(void)loadScoreLabels
+{
+    // setting score to 0
+    self.score = 0;
+    
+    // properites of a score label
+    scoreLabel = [PointsLabel pointsLabelWithFontNamed:@"CoolveticaRg-Regular"];
+    scoreLabel.fontSize = 50;
+    scoreLabel.name = @"scoreLabel";
+    scoreLabel.position = CGPointMake(160, 600);
+    scoreLabel.fontColor = [SKColor greenColor];
+    scoreLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
+    [scene addChild:scoreLabel];
+    
+    NSUserDefaults *defaults3 = [NSUserDefaults standardUserDefaults];
+    
+    NSInteger *highScorePoints  = [defaults3 integerForKey:@"highScoreLabel"];
+    
+    highScoreLabel = [PointsLabel pointsLabelWithFontNamed:@"CoolveticaRg-Regular"];
+    highScoreLabel.fontSize = 50;
+    highScoreLabel.name = @"highScoreLabel";
+    highScoreLabel.position = CGPointMake(-120, 600);
+    [highScoreLabel setPoints:highScorePoints];
+    highScoreLabel.fontColor = [SKColor greenColor];
+    highScoreLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
+    [scene addChild:highScoreLabel];
+    
+    // set up number of lives
+    self.lives = 3;
+    
+    lifeLabel = [SKLabelNode labelNodeWithFontNamed:@"CoolveticaRg-Regular"];
+    lifeLabel.fontSize = 50;
+    lifeLabel.name = @"lifeLabel";
+    lifeLabel.position = CGPointMake(0, 600);
+    lifeLabel.text = [NSString stringWithFormat:@"%i", self.lives];
+    [scene addChild:lifeLabel];
+}
+
+#pragma mark Game Sounds
+
+-(void)loadGameSounds
+{
+    // initialize game music player
+    NSURL *urlMusic = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"ArrayBallMusic" ofType:@"mp3"]];
+    gameMusic = [[AVAudioPlayer alloc] initWithContentsOfURL:urlMusic error:nil];
+    
+    // initialize game over music
+    NSURL *urlOver = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"GameOverMusic" ofType:@"mp3"]];
+    gameOverMusic = [[AVAudioPlayer alloc] initWithContentsOfURL:urlOver error:nil];
+    
+    // initialize paddle sound
+    NSURL *urlPaddle = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"paddleSound" ofType:@"wav"]];
+    paddleSound = [[AVAudioPlayer alloc] initWithContentsOfURL:urlPaddle error:nil];
+    
+    NSURL *urlNuke = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"nuke" ofType:@"mp3"]];
+    nukeSound = [[AVAudioPlayer alloc] initWithContentsOfURL:urlNuke error:nil];
+    
+    NSURL *url1Up = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"1UP" ofType:@"mp3"]];
+    lifeUp = [[AVAudioPlayer alloc] initWithContentsOfURL:url1Up error:nil];
+    
+    NSURL *urlForceField = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"forceField" ofType:@"wav"]];
+    forceFieldSound = [[AVAudioPlayer alloc] initWithContentsOfURL:urlForceField error:nil];
+}
+
+#pragma mark Object Categories
+
+-(void)setUpCategories
+{
+    // setting up ball categories
+    ball.physicsBody.categoryBitMask = ballCategory;
+    ball.physicsBody.contactTestBitMask = paddleCategory;
+    ball.physicsBody.collisionBitMask = barrierCategory;
+    
+    paddle.physicsBody.categoryBitMask = paddleCategory;
+
+    rightBarrier.physicsBody.categoryBitMask = barrierCategory;
+    
+    topBarrier.physicsBody.categoryBitMask = barrierCategory;
+    
+    leftBarrier.physicsBody.categoryBitMask = barrierCategory;
+    
+    gameOverBarrier.physicsBody.categoryBitMask = gameOverBarrierCategory;
+    gameOverBarrier.physicsBody.contactTestBitMask = ballCategory | powerUpCategory;
+}
+
+#pragma mark Start/Restart/Gameover
 
 -(void)start
 {
@@ -324,6 +404,8 @@ static const uint32_t powerUpCategory = 0x1 << 4;
     [self.view presentScene:newScene];
 }
 
+#pragma mark Touch Events
+
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     /* Called when a touch begins */
     
@@ -362,6 +444,7 @@ static const uint32_t powerUpCategory = 0x1 << 4;
         }
         
         else if ([node.name isEqualToString:@"resetButton"]) {
+            [gameMusic stop];
             GameScene *newScene = [[GameScene alloc] initWithSize:self.frame.size];
             
             newScene.scaleMode = SKSceneScaleModeAspectFill;
@@ -391,6 +474,8 @@ static const uint32_t powerUpCategory = 0x1 << 4;
     }
 }
 
+#pragma mark Adding Balls
+
 // this method adds a new ball to the game when needed
 -(void)addBall
 {
@@ -402,13 +487,26 @@ static const uint32_t powerUpCategory = 0x1 << 4;
     newBall.physicsBody.collisionBitMask = barrierCategory;
     
     [scene addChild:newBall];
+    [ballArray addObject:newBall];
     self.ballCounter++;
+}
+
+#pragma mark Powerup Generation and Timers
+
+// this method generates a random number between 1 and 10
+// this is used to determine whether or not a power up will appear on screen
+-(int)getRandomNumber
+{
+    int randomNumber;
+    randomNumber = arc4random() % 10 + 1;
+    
+    return randomNumber;
 }
 
 // this method adds a power up to the game
 -(void)addPowerUp
 {
-    PowerUp *powerUp = [PowerUp powerUp];
+    powerUp = [PowerUp powerUp];
     powerUp.position = CGPointMake(40, 500);
     
     powerUp.physicsBody.categoryBitMask = powerUpCategory;
@@ -418,10 +516,266 @@ static const uint32_t powerUpCategory = 0x1 << 4;
     [scene addChild:powerUp];
 }
 
+// if the user collects a power up during gameplay
+// this method will be called to generate a random number based on the number of power ups
+// the user will be rewarded with a random power up
+-(int)powerUpNumber
+{
+    int randomPowerUp;
+    
+    // if the user has more than 4 balls on screen
+    // the user has a chance to obtain the nuke power up
+    if (self.nukeTime) {
+        randomPowerUp = arc4random() % 6 + 1;
+    }
+    
+    else {
+        randomPowerUp = arc4random() % 5 + 1;
+    }
+    
+    return randomPowerUp;
+}
+
+// this method gives the user the power up that is randomly generated
 -(void)getPowerUp
 {
     NSLog(@"power up");
+    
+    self.randomPowerUp = [self powerUpNumber];
+    
+    switch (self.randomPowerUp) {
+        case 1:
+            [paddle grow];
+            [self powerUpTimerDelegate];
+            break;
+        case 2:
+            [scene runAction:[SKAction performSelector:@selector(vortex) onTarget:self]];
+            [self powerUpTimerDelegate];
+            break;
+        case 3:
+            [self extraLife];
+            [self powerUpTimerDelegate];
+            break;
+        case 4:
+            [scene runAction:[SKAction performSelector:@selector(addForceField) onTarget:self]];
+            [self powerUpTimerDelegate];
+            break;
+        case 5:
+            [self alterGravity];
+            [self powerUpTimerDelegate];
+            break;
+        case 6:
+            NSLog(@"nuke");
+            [self powerUpTimerDelegate];
+            break;
+        default:
+            break;
+    }
 }
+
+// calls the 8 second timer for the duration of each power up
+-(void)powerUpTimerDelegate
+{
+    if (self.randomPowerUp == 6) {
+        self.seconds = 14;
+        self.powerUpTimer = [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(testMethod) userInfo:nil repeats:YES];
+    }
+    else {
+        self.seconds = 8;
+        self.powerUpTimer = [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(testMethod) userInfo:nil repeats:YES];
+    }
+}
+
+// begins the timer for the power up
+-(void)testMethod
+{
+    if (self.seconds == 0)
+    {
+        if (self.powerUpIsVisible && !self.powerUpReceived) {
+            NSLog(@"power up regenerated");
+            self.powerUpIsVisible = NO;
+        }
+        
+        if (self.randomPowerUp == 1 && self.powerUpReceived) {
+            NSLog(@"no more luxury life");
+            [self.powerUpTimer invalidate];
+            [paddle normalPaddle];
+            
+            // the user now does not have a power up
+            self.powerUp = NO;
+            
+            // now the power up is no longer visible
+            // the program can begin to re add them to the scene
+            self.powerUpIsVisible = NO;
+        }
+        
+        else if (self.randomPowerUp == 2 && self.powerUpReceived) {
+            NSLog(@"no more luxury life");
+            [self.powerUpTimer invalidate];
+            
+            [vortex removeFromParent];
+            
+            self.powerUp = NO;
+            self.powerUpIsVisible = NO;
+        }
+        
+        else if (self.randomPowerUp == 3 && self.powerUpReceived) {
+            NSLog(@"no more luxury life");
+            [self.powerUpTimer invalidate];
+            
+            self.powerUp = NO;
+            self.powerUpIsVisible = NO;
+        }
+        
+        else if (self.randomPowerUp == 4 && self.powerUpReceived) {
+            NSLog(@"no more luxury life");
+            [self.powerUpTimer invalidate];
+            [forceField removeFromParent];
+            
+            self.powerUp = NO;
+            self.powerUpIsVisible = NO;
+        }
+        
+        else if (self.randomPowerUp == 5 && self.powerUpReceived) {
+            NSLog(@"no more luxury life");
+            [self.powerUpTimer invalidate];
+            
+            for (Ball *balls in ballArray) {
+                balls.physicsBody.affectedByGravity = YES;
+            }
+            
+            self.powerUp = NO;
+            self.powerUpIsVisible = NO;
+        }
+        
+        else if (self.randomPowerUp == 6 && self.powerUpReceived) {
+            NSLog(@"no more luxury life");
+            
+            [nukeCountDownLabel removeFromParent];
+            [self.powerUpTimer invalidate];
+            [self destroyBalls];
+            
+            self.powerUp = NO;
+            self.powerUpIsVisible = NO;
+            self.nukeLabelAdded = NO;
+        }
+    }
+    
+    else {
+        
+        if (self.nukeTime && self.randomPowerUp == 6) {
+            [nukeSound play];
+            self.seconds--;
+            NSLog(@"Seconds left: %i", self.seconds);
+            
+            if (self.seconds <= 10) {
+                if (!self.nukeLabelAdded) {
+                    [scene runAction:[SKAction performSelector:@selector(addNukeLabel) onTarget:self]];
+                    self.nukeLabelAdded = YES;
+                }
+                nukeCountDownLabel.text = [NSString stringWithFormat:@"%i", self.seconds];
+            }
+        }
+        
+        else {
+            self.seconds--;
+            NSLog(@"Seconds left: %i", self.seconds);
+        }
+    }
+}
+
+#pragma mark Powerups
+
+// this power up places a vortex on the screen
+// if a ball touches the vortex, the ball will stop moving completely in its tracks
+// and fall straight down
+-(void)vortex
+{
+    vortex = [SKSpriteNode spriteNodeWithImageNamed:@"vortex"];
+    vortex.size = CGSizeMake(350, 350);
+    vortex.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:60];
+    vortex.physicsBody.dynamic= YES;
+    vortex.physicsBody.mass = 9000000;
+    vortex.physicsBody.affectedByGravity = NO;
+    vortex.position = CGPointMake(0, 550);
+    
+    vortex.physicsBody.categoryBitMask = powerUpNetCategory;
+    vortex.physicsBody.contactTestBitMask = ballCategory;
+
+    [scene addChild:vortex];
+}
+
+// this power up awards the user with an extra life
+-(void)extraLife
+{
+    NSLog(@"1UP");
+    self.lives++;
+    [lifeUp play];
+    lifeLabel.text = [NSString stringWithFormat:@"%i", self.lives];
+}
+
+// adds a force field to the game which bounces balls up and down the screen
+// this also gets the user more points
+-(void)addForceField
+{
+    forceField = [SKSpriteNode spriteNodeWithImageNamed:@"forceField"];
+    forceField.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:forceField.size];
+    
+    forceField.position = CGPointMake(0, 200);
+    forceField.physicsBody.allowsRotation = NO;
+    forceField.physicsBody.dynamic = NO;
+    
+    forceField.physicsBody.affectedByGravity = NO;
+    
+    forceField.physicsBody.categoryBitMask = forceFieldCategory;
+    forceField.physicsBody.contactTestBitMask = ballCategory | paddleCategory;
+    forceField.physicsBody.collisionBitMask = ballCategory;
+    
+    
+    [scene addChild:forceField];
+}
+
+// this power up freezes all of the balls in place on screen except for one ball
+// that is allowed to move freely around
+-(void)alterGravity
+{
+    for (Ball *balls in ballArray) {
+        balls.physicsBody.affectedByGravity = NO;
+        balls.physicsBody.velocity = CGVectorMake(0, 0);
+    }
+    
+    if ([ballArray lastObject]) {
+        Ball *luckyBall = [ballArray lastObject];
+        luckyBall.physicsBody.affectedByGravity = YES;
+    }
+}
+
+// this power up is a nuke, and is called at the end of a 10 second timer
+// this power up blows up every single ball on screen and removes them
+-(void)destroyBalls
+{
+    NSLog(@"Nuked");
+    [scene removeChildrenInArray:ballArray];
+    
+    [scene runAction:[SKAction performSelector:@selector(addBall) onTarget:self]];
+    self.ballCounter = 1;
+    
+    self.nukeTime = NO;
+}
+
+// this adds the 10 second countdown label onto the screen
+-(void)addNukeLabel
+{
+    NSLog(@"nuke label added");
+    nukeCountDownLabel = [SKLabelNode labelNodeWithFontNamed:@"CoolveticaRg-Regular"];
+    nukeCountDownLabel.position = CGPointMake(0, 200);
+    nukeCountDownLabel.text = @"10";
+    nukeCountDownLabel.fontSize = 80;
+    
+    [scene addChild:nukeCountDownLabel];
+}
+
+#pragma mark Highscore Update
 
 -(void)updateHighScore
 {
@@ -433,19 +787,7 @@ static const uint32_t powerUpCategory = 0x1 << 4;
     }
 }
 
-// see comment below
--(void)update:(CFTimeInterval)currentTime {
-    /* Called before each frame is rendered */
-    
-    if (self.isTouching && self.movingLeft) {
-        [paddle movePaddleLeft:-10];
-    }
-    
-    else if (self.isTouching && self.movingRight) {
-        [paddle movePaddleRight:10];
-    }
-    
-}
+#pragma mark Collision Detection
 
 -(void)didBeginContact:(SKPhysicsContact *)contact
 {
@@ -463,8 +805,9 @@ static const uint32_t powerUpCategory = 0x1 << 4;
     // if a body in the scene makes contact with the paddle
     // shoot the ball back up
     if ((firstBody.categoryBitMask & ballCategory) != 0 && (secondBody.categoryBitMask & paddleCategory) != 0) {
+        
         // move ball up
-        [firstBody applyImpulse:CGVectorMake(arc4random() % 20 + 50, arc4random() % 20 + 70)];
+        [firstBody applyImpulse:CGVectorMake(arc4random() % 20 + 40, arc4random() % 20 + 70)];
         
         // increment score
         [scoreLabel increment];
@@ -475,17 +818,62 @@ static const uint32_t powerUpCategory = 0x1 << 4;
             [scene runAction:[SKAction performSelector:@selector(addBall) onTarget:self]];
         }
         
-        if (arc4random() % 10 + 1 == 5) {
+        // if the power is not visible and the random number is true, add the power up to the scene
+        if ([self getRandomNumber] == 2 && !self.powerUpIsVisible) {
             [scene runAction:[SKAction performSelector:@selector(addPowerUp) onTarget:self]];
+            
+            // the power up is now visible
+            self.powerUpIsVisible = YES;
+        }
+        
+        // if there are 4 or more balls on the screen
+        // the nuke power up becomes possible to obtain
+        if (self.ballCounter >= 4) {
+            self.nukeTime = YES;
         }
         
         // play paddle sound
         [paddleSound play];
     }
     
+    // if a ball comes in contact with the vortex, set the balls velocity to 0 in all directions
+    else if ((firstBody.categoryBitMask & ballCategory) != 0 && (secondBody.categoryBitMask & powerUpNetCategory) != 0) {
+        firstBody.velocity = CGVectorMake(0, 0);
+    }
+    
+    // if a ball comes in contact with the force field
+    // shoot the balls back up and increment the score
+    else if ((firstBody.categoryBitMask & ballCategory) != 0 && (secondBody.categoryBitMask & forceFieldCategory) != 0) {
+        NSLog(@"FORCE FIELD!!");
+        [forceFieldSound play];
+        [firstBody applyImpulse:CGVectorMake(arc4random() % 20 + 50, 50)];
+        [scoreLabel increment];
+        
+        // if the score is divisible by 5, add another bal
+        if (scoreLabel.number % 5 == 0) {
+            [scene runAction:[SKAction performSelector:@selector(addBall) onTarget:self]];
+        }
+    }
+    
     // checks for collision of power up and paddle
     else if ((firstBody.categoryBitMask & paddleCategory) != 0 && (secondBody.categoryBitMask & powerUpCategory) != 1) {
-        [self getPowerUp];
+        self.powerUpReceived = YES;
+        [powerUp removeFromParent];
+        
+        // if the user does not have a power up
+        if (!self.powerUp) {
+            [self getPowerUp];
+            
+            // now the user has a power up
+            self.powerUp = YES;
+        }
+    }
+    
+    // if the user is to miss a power up and the power up reaches the bottom of the screen
+    // regenerate a power up
+    else if ((firstBody.categoryBitMask & powerUpCategory) != 0 && (secondBody.categoryBitMask & powerUpBarrierCategory) != 0) {
+        NSLog(@"power up regenerated");
+        self.powerUpIsVisible = NO;
     }
     
     // if a ball hits the game over barrier below the paddle
@@ -518,6 +906,10 @@ static const uint32_t powerUpCategory = 0x1 << 4;
             [gameMusic stop];
             // play game over music
             [gameOverMusic play];
+            
+            if (self.nukeTime) {
+                [nukeSound stop];
+            }
         
             // call game over method
             [self gameOver];
@@ -527,7 +919,9 @@ static const uint32_t powerUpCategory = 0x1 << 4;
         }
     }
 }
- 
+
+#pragma mark Game Animations
+
 // this animates the pulsing effect of the tapToBegin/Reset labels
 -(void)animateWithPulse:(SKNode *)node
 {
@@ -539,6 +933,19 @@ static const uint32_t powerUpCategory = 0x1 << 4;
     // this is our pulse action that will run the two animations
     SKAction *pulse = [SKAction sequence:@[disappear, appear]];
     [node runAction:[SKAction repeatActionForever:pulse]];
+}
+
+// see comment below
+-(void)update:(CFTimeInterval)currentTime {
+    /* Called before each frame is rendered */
+    
+    if (self.isTouching && self.movingLeft) {
+        [paddle movePaddleLeft:-10];
+    }
+    
+    else if (self.isTouching && self.movingRight) {
+        [paddle movePaddleRight:10];
+    }
 }
 
 @end

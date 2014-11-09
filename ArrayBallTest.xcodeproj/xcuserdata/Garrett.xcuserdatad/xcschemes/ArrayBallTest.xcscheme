@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "68D726C019E47B120016F525"
-               BuildableName = "ArrayBallTest.app"
-               BlueprintName = "ArrayBallTest"
+               BuildableName = "ArrayBall.app"
+               BlueprintName = "ArrayBallTest.temp_caseinsensitive_renameTest"
                ReferencedContainer = "container:ArrayBallTest.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -29,8 +29,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "68D726DE19E47B120016F525"
-               BuildableName = "ArrayBallTestTests.xctest"
-               BlueprintName = "ArrayBallTestTests"
+               BuildableName = "ArrayBallTest.temp_caseinsensitive_renameTestTests.xctest"
+               BlueprintName = "ArrayBallTest.temp_caseinsensitive_renameTestTests"
                ReferencedContainer = "container:ArrayBallTest.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -47,8 +47,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "68D726DE19E47B120016F525"
-               BuildableName = "ArrayBallTestTests.xctest"
-               BlueprintName = "ArrayBallTestTests"
+               BuildableName = "ArrayBallTest.temp_caseinsensitive_renameTestTests.xctest"
+               BlueprintName = "ArrayBallTest.temp_caseinsensitive_renameTestTests"
                ReferencedContainer = "container:ArrayBallTest.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -57,8 +57,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "68D726C019E47B120016F525"
-            BuildableName = "ArrayBallTest.app"
-            BlueprintName = "ArrayBallTest"
+            BuildableName = "ArrayBall.app"
+            BlueprintName = "ArrayBallTest.temp_caseinsensitive_renameTest"
             ReferencedContainer = "container:ArrayBallTest.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -76,8 +76,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "68D726C019E47B120016F525"
-            BuildableName = "ArrayBallTest.app"
-            BlueprintName = "ArrayBallTest"
+            BuildableName = "ArrayBall.app"
+            BlueprintName = "ArrayBallTest.temp_caseinsensitive_renameTest"
             ReferencedContainer = "container:ArrayBallTest.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -94,8 +94,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "68D726C019E47B120016F525"
-            BuildableName = "ArrayBallTest.app"
-            BlueprintName = "ArrayBallTest"
+            BuildableName = "ArrayBall.app"
+            BlueprintName = "ArrayBallTest.temp_caseinsensitive_renameTest"
             ReferencedContainer = "container:ArrayBallTest.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

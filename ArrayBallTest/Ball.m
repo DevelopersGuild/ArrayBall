@@ -24,7 +24,7 @@
     Ball *ball = [Ball spriteNodeWithImageNamed:@"ball"];
     
     // set the position of the ball
-    ball.position = CGPointMake(0, 80);
+    ball.position = CGPointMake(0, 110);
     
     // set ball name property
     ball.name = @"ball";
@@ -36,7 +36,7 @@
     ball.physicsBody.affectedByGravity = YES;
     
     // this checks to see how bouncy the ball is (0 being not bouncy, 1 being very bouncy)
-    ball.physicsBody.restitution = 0.5;
+    ball.physicsBody.restitution = 0.55;
     
     return ball;
 }

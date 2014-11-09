@@ -16,6 +16,9 @@
 -(void)movePaddleLeft:(int)speed;
 -(void)movePaddleRight:(int)speed;
 
-// paddle power ups
+-(void)normalPaddle;
+
+// power ups
 -(void)grow;
+
 @end
