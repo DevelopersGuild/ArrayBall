@@ -52,6 +52,12 @@
 // timer used to keep track of how long the user has had a power up
 @property NSTimer *powerUpTimer;
 
+// this keeps track of the number of seconds that the user is alive
+@property NSTimer *gameTimer;
+
+// keeps track of the number of seconds the game has been running
+@property int gameSeconds;
+
 // this holds onto the random power up that is generated
 @property int randomPowerUp;
 
@@ -65,7 +71,7 @@
 @property int seconds;
 
 // this is a score variable
-@property int score;
+@property int paddleHitCount;
 
 // number of lives for the player
 @property int lives;
@@ -94,6 +100,9 @@
     // helps to keep track of the number of balls on screen
     // and can be used for power ups that affect all balls
     NSMutableArray *ballArray;
+    
+    // this array holds all of the game sounds
+    NSMutableArray *soundsArray;
 
     // game barriers
     Barriers *rightBarrier, *topBarrier, *leftBarrier, *gameOverBarrier;
@@ -126,7 +135,7 @@ static const uint32_t powerUpNetCategory = 0x1 << 5;
 static const uint32_t forceFieldCategory = 0x1 << 7;
 static const uint32_t powerUpBarrierCategory = 0x1 << 8;
 
-@synthesize score;
+@synthesize paddleHitCount;
 
 //static const uint32_t barrierCategory = 0x1 << 1;
 
@@ -157,6 +166,12 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
     [self setUpCategories];
     
    // self.powerUp = YES;
+    
+    // paddle hit count starts at 0
+    paddleHitCount = 0;
+    
+    // game seconds starts at 0
+    self.gameSeconds = 0;
 }
 
 -(void)loadObjectsToScreen
@@ -189,6 +204,7 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
     rightBarrier = [Barriers rightBarrier];
     gameOverBarrier = [Barriers gameOverBarrier];
     
+    // add the power up barrier
     SKSpriteNode *powerUpBarrier = [SKSpriteNode spriteNodeWithColor:[UIColor blackColor] size:CGSizeMake(1000, 20)];
     powerUpBarrier.position = CGPointMake(0, 0);
     powerUpBarrier.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:powerUpBarrier.size];
@@ -244,6 +260,8 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
     return rightButton;
 }
 
+// creates the resetButton
+// for testing purposes only
 -(SKSpriteNode *)resetButton
 {
     SKSpriteNode *resetButton = [SKSpriteNode spriteNodeWithImageNamed:@"Reset"];
@@ -255,11 +273,9 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
     return resetButton;
 }
 
+// loads the game's score labels
 -(void)loadScoreLabels
 {
-    // setting score to 0
-    self.score = 0;
-    
     // properites of a score label
     scoreLabel = [PointsLabel pointsLabelWithFontNamed:@"CoolveticaRg-Regular"];
     scoreLabel.fontSize = 50;
@@ -317,6 +333,8 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
     
     NSURL *urlForceField = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"forceField" ofType:@"wav"]];
     forceFieldSound = [[AVAudioPlayer alloc] initWithContentsOfURL:urlForceField error:nil];
+    
+    soundsArray = [[NSMutableArray alloc] initWithObjects:gameMusic, gameOverMusic, paddleSound, nukeSound, lifeUp, forceFieldSound, nil];
 }
 
 #pragma mark Object Categories
@@ -352,12 +370,21 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
     
     // play game music
     [gameMusic play];
+    
+    // start game timer
+    [self gameTimerDelegate];
 }
 
 // called when a ball reaches the bottom of the screen
 -(void)gameOver
 {
     self.isGameOver = YES;
+    
+    // stops all of the current game sounds that are being played
+    // when the game is over
+    for (AVAudioPlayer *sounds in soundsArray) {
+        [sounds stop];
+    }
     
     // game over label creation
     SKLabelNode *gameOverLabel = [SKLabelNode labelNodeWithFontNamed:@"AmericanTypewriter-Bold"];
@@ -491,6 +518,34 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
     self.ballCounter++;
 }
 
+#pragma mark Game Timer
+
+// this calls the timer that keeps track of the number of the seconds the user is surviving
+// aka the user's "score"
+-(void)gameTimerDelegate
+{
+    self.gameTimer = [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(incrementGameTimer) userInfo:nil repeats:YES];
+}
+
+// this increments the user's game score every second
+-(void)incrementGameTimer
+{
+    // if the game is over
+    // stop the timer
+    if (self.isGameOver) {
+        [self.gameTimer invalidate];
+    }
+    
+    // if the game is not over
+    // keep incrementing score every second
+    else {
+        self.gameSeconds++;
+        [scoreLabel increment];
+        NSLog(@"Game seconds: %i", self.gameSeconds);
+    }
+    
+}
+
 #pragma mark Powerup Generation and Timers
 
 // this method generates a random number between 1 and 10
@@ -498,7 +553,7 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
 -(int)getRandomNumber
 {
     int randomNumber;
-    randomNumber = arc4random() % 10 + 1;
+    randomNumber = arc4random() % 2 + 1;
     
     return randomNumber;
 }
@@ -806,15 +861,15 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
     // shoot the ball back up
     if ((firstBody.categoryBitMask & ballCategory) != 0 && (secondBody.categoryBitMask & paddleCategory) != 0) {
         
+        // increment paddle hit counter
+        paddleHitCount++;
+        
         // move ball up
         [firstBody applyImpulse:CGVectorMake(arc4random() % 20 + 40, arc4random() % 20 + 70)];
         
-        // increment score
-        [scoreLabel increment];
-        
         // if the score is divisible by 5
         // add another ball using an action perform selector
-        if (scoreLabel.number % 5 == 0 && scoreLabel.number != 0) {
+        if (paddleHitCount % 5 == 0 && paddleHitCount != 0) {
             [scene runAction:[SKAction performSelector:@selector(addBall) onTarget:self]];
         }
         
@@ -847,12 +902,6 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
         NSLog(@"FORCE FIELD!!");
         [forceFieldSound play];
         [firstBody applyImpulse:CGVectorMake(arc4random() % 20 + 50, 50)];
-        [scoreLabel increment];
-        
-        // if the score is divisible by 5, add another bal
-        if (scoreLabel.number % 5 == 0) {
-            [scene runAction:[SKAction performSelector:@selector(addBall) onTarget:self]];
-        }
     }
     
     // checks for collision of power up and paddle
@@ -902,14 +951,8 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
         // if the user has 0 lives
         // the game is over
         if (self.lives == 0) {
-            // stop game music
-            [gameMusic stop];
-            // play game over music
-            [gameOverMusic play];
             
-            if (self.nukeTime) {
-                [nukeSound stop];
-            }
+            self.gameTimer = nil;
         
             // call game over method
             [self gameOver];
