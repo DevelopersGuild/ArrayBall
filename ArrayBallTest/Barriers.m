@@ -30,7 +30,7 @@
     // create left barrier and set properties
     Barriers *leftBarrier = [Barriers spriteNodeWithColor:[UIColor blackColor] size:CGSizeMake(30, 850)];
     leftBarrier.name = @"leftBarrier";
-    leftBarrier.position = CGPointMake(-225, 340);
+    leftBarrier.position = CGPointMake(-245, 340);
     leftBarrier.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:leftBarrier.size];
     leftBarrier.physicsBody.dynamic = NO;
     leftBarrier.physicsBody.affectedByGravity = NO;
@@ -44,7 +44,7 @@
     // create right barrier and set properties
     Barriers *rightBarrier = [Barriers spriteNodeWithColor:[UIColor blackColor] size:CGSizeMake(30, 850)];
     rightBarrier.name = @"rightBarrier";
-    rightBarrier.position = CGPointMake(225, 340);
+    rightBarrier.position = CGPointMake(245, 340);
     rightBarrier.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:rightBarrier.size];
     rightBarrier.physicsBody.dynamic = NO;
     rightBarrier.physicsBody.affectedByGravity = NO;

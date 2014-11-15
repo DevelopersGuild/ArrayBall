@@ -6,6 +6,7 @@
 //  Copyright (c) 2014 Noox. All rights reserved.
 //
 //
+//  Make 'Tap to begin label' white with a black border
 
 #import "GameScene.h"
 #import "Paddle.h"
@@ -55,8 +56,13 @@
 // this keeps track of the number of seconds that the user is alive
 @property NSTimer *gameTimer;
 
+@property NSTimer *missileTimer;
+
 // keeps track of the number of seconds the game has been running
 @property int gameSeconds;
+
+// keeps track of the number of seconds between each missile
+@property float missileSeconds;
 
 // this holds onto the random power up that is generated
 @property int randomPowerUp;
@@ -89,6 +95,10 @@
     
     // force field object
     SKSpriteNode *forceField;
+    
+    // nuke sprites
+    SKSpriteNode *explosion;
+    SKSpriteNode *nuke;
     
     // set up a node tree to hold our all of our nodes
     SKNode *scene;
@@ -134,6 +144,7 @@ static const uint32_t powerUpCategory = 0x1 << 4;
 static const uint32_t powerUpNetCategory = 0x1 << 5;
 static const uint32_t forceFieldCategory = 0x1 << 7;
 static const uint32_t powerUpBarrierCategory = 0x1 << 8;
+static const uint32_t missileCategory = 0x1 << 9;
 
 @synthesize paddleHitCount;
 
@@ -180,7 +191,8 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
     [self addChild:scene];
     
     // create game background
-    SKSpriteNode *spaceBackground = [SKSpriteNode spriteNodeWithImageNamed:@"space"];
+    SKSpriteNode *spaceBackground = [SKSpriteNode spriteNodeWithImageNamed:@"spaceBackground"];
+    spaceBackground.size = CGSizeMake(445, 775);
     spaceBackground.position = CGPointMake(0, 300);
     [scene addChild:spaceBackground];
     
@@ -380,11 +392,10 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
 {
     self.isGameOver = YES;
     
-    // stops all of the current game sounds that are being played
-    // when the game is over
-    for (AVAudioPlayer *sounds in soundsArray) {
-        [sounds stop];
-    }
+    [gameMusic stop];
+    [nukeSound stop];
+    
+    [gameOverMusic play];
     
     // game over label creation
     SKLabelNode *gameOverLabel = [SKLabelNode labelNodeWithFontNamed:@"AmericanTypewriter-Bold"];
@@ -541,9 +552,12 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
     else {
         self.gameSeconds++;
         [scoreLabel increment];
-        NSLog(@"Game seconds: %i", self.gameSeconds);
+        
+        if (explosion.alpha == 1.0) {
+            explosion.alpha = 0.0;
+            [explosion removeFromParent];
+        }
     }
-    
 }
 
 #pragma mark Powerup Generation and Timers
@@ -553,7 +567,7 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
 -(int)getRandomNumber
 {
     int randomNumber;
-    randomNumber = arc4random() % 2 + 1;
+    randomNumber = arc4random() % 5 + 1;
     
     return randomNumber;
 }
@@ -581,13 +595,19 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
     // if the user has more than 4 balls on screen
     // the user has a chance to obtain the nuke power up
     if (self.nukeTime) {
-        randomPowerUp = arc4random() % 6 + 1;
+        randomPowerUp = arc4random() % 7 + 1;
     }
     
     else {
-        randomPowerUp = arc4random() % 5 + 1;
+        // allow the user to receive the laser power up if there are 2 or more balls present
+        if (self.ballCounter >= 2) {
+            randomPowerUp = arc4random() % 6 + 1;
+        }
+        // if only 1 ball, user can only receive other power ups
+        else {
+            randomPowerUp = arc4random() % 5 + 1;
+        }
     }
-    
     return randomPowerUp;
 }
 
@@ -620,6 +640,10 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
             [self powerUpTimerDelegate];
             break;
         case 6:
+            [self missileTimerDelegate];
+            [self powerUpTimerDelegate];
+            break;
+        case 7:
             NSLog(@"nuke");
             [self powerUpTimerDelegate];
             break;
@@ -631,7 +655,7 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
 // calls the 8 second timer for the duration of each power up
 -(void)powerUpTimerDelegate
 {
-    if (self.randomPowerUp == 6) {
+    if (self.randomPowerUp == 7) {
         self.seconds = 14;
         self.powerUpTimer = [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(testMethod) userInfo:nil repeats:YES];
     }
@@ -705,6 +729,15 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
         
         else if (self.randomPowerUp == 6 && self.powerUpReceived) {
             NSLog(@"no more luxury life");
+            [self.powerUpTimer invalidate];
+            
+            self.powerUp = NO;
+            self.powerUpIsVisible = NO;
+
+        }
+        
+        else if (self.randomPowerUp == 7 && self.powerUpReceived) {
+            NSLog(@"no more luxury life");
             
             [nukeCountDownLabel removeFromParent];
             [self.powerUpTimer invalidate];
@@ -718,13 +751,14 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
     
     else {
         
-        if (self.nukeTime && self.randomPowerUp == 6) {
+        if (self.nukeTime && self.randomPowerUp == 7) {
             [nukeSound play];
             self.seconds--;
             NSLog(@"Seconds left: %i", self.seconds);
             
             if (self.seconds <= 10) {
                 if (!self.nukeLabelAdded) {
+                    [scene runAction:[SKAction performSelector:@selector(addNuke) onTarget:self]];
                     [scene runAction:[SKAction performSelector:@selector(addNukeLabel) onTarget:self]];
                     self.nukeLabelAdded = YES;
                 }
@@ -758,6 +792,42 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
     vortex.physicsBody.contactTestBitMask = ballCategory;
 
     [scene addChild:vortex];
+    [self rotate:vortex];
+}
+
+// create a shooting action for the missiles
+-(void)missile
+{
+    SKSpriteNode *missile = [SKSpriteNode spriteNodeWithImageNamed:@"missile"];
+    missile.size = CGSizeMake(8, 40);
+    missile.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:missile.size];
+    missile.physicsBody.dynamic = NO;
+    missile.physicsBody.affectedByGravity = NO;
+    missile.position = CGPointMake(paddle.position.x, paddle.position.y + 55);
+    
+    missile.physicsBody.categoryBitMask = missileCategory;
+    missile.physicsBody.contactTestBitMask = ballCategory | paddleCategory;
+    
+    [scene addChild:missile];
+    
+    [self fireMissile:missile];
+}
+
+-(void)missileTimerDelegate
+{
+    self.missileTimer = [NSTimer scheduledTimerWithTimeInterval:1.5 target:self selector:@selector(loadMissiles) userInfo:nil repeats:YES];
+}
+
+-(void)loadMissiles
+{
+    self.missileSeconds += 1.5;
+    NSLog(@"loaded %f", self.missileSeconds);
+    [scene runAction:[SKAction performSelector:@selector(missile) onTarget:self]];
+    
+    if (self.missileSeconds >= 9.0) {
+        self.missileSeconds = 0.0;
+        [self.missileTimer invalidate];
+    }
 }
 
 // this power up awards the user with an extra life
@@ -810,7 +880,19 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
 -(void)destroyBalls
 {
     NSLog(@"Nuked");
-    [scene removeChildrenInArray:ballArray];
+    [nuke removeFromParent];
+    for (Ball *b in ballArray) {
+        [b removeFromParent];
+    }
+    self.ballCounter = 0;
+    
+    explosion = [SKSpriteNode spriteNodeWithImageNamed:@"explosion"];
+    explosion.position = CGPointMake(0, 350);
+    explosion.size = CGSizeMake(1500, 1500);
+    explosion.alpha = 0.0;
+    [scene addChild:explosion];
+    
+    [self explode:explosion];
     
     [scene runAction:[SKAction performSelector:@selector(addBall) onTarget:self]];
     self.ballCounter = 1;
@@ -823,11 +905,23 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
 {
     NSLog(@"nuke label added");
     nukeCountDownLabel = [SKLabelNode labelNodeWithFontNamed:@"CoolveticaRg-Regular"];
-    nukeCountDownLabel.position = CGPointMake(0, 200);
+    nukeCountDownLabel.position = CGPointMake(150, 545);
     nukeCountDownLabel.text = @"10";
-    nukeCountDownLabel.fontSize = 80;
+    nukeCountDownLabel.fontSize = 40;
     
     [scene addChild:nukeCountDownLabel];
+}
+
+// this adds the nuke symbol when the timer is seconds on the nuke
+-(void)addNuke
+{
+    NSLog(@"nuke logo added");
+    nuke = [SKSpriteNode spriteNodeWithImageNamed:@"nuke"];
+    nuke.position = CGPointMake(150, 560);
+    nuke.size = CGSizeMake(55, 55);
+    nuke.alpha = 1.0;
+    [scene addChild:nuke];
+    [self rotateNuke:nuke];
 }
 
 #pragma mark Highscore Update
@@ -865,7 +959,7 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
         paddleHitCount++;
         
         // move ball up
-        [firstBody applyImpulse:CGVectorMake(arc4random() % 20 + 40, arc4random() % 20 + 70)];
+        [firstBody applyImpulse:CGVectorMake(arc4random() % 20 + 50, arc4random() % 20 + 70)];
         
         // if the score is divisible by 5
         // add another ball using an action perform selector
@@ -896,16 +990,36 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
         firstBody.velocity = CGVectorMake(0, 0);
     }
     
+    else if ((firstBody.categoryBitMask & ballCategory) != 0 && (secondBody.categoryBitMask & missileCategory) != 0) {
+        NSLog(@"missile hit");
+        
+        // we cast two sprite nodes to hold the physics bodies of the missile and ball here
+        SKSpriteNode *firstNode = (SKSpriteNode *) firstBody.node;
+        SKSpriteNode *secondNode = (SKSpriteNode *) secondBody.node;
+        
+        // then remove the missile and ball from the scene
+        [firstNode removeFromParent];
+        [secondNode removeFromParent];
+        
+        // ball counter decremented due to ball being removed
+        self.ballCounter--;
+        
+        // if the ball count is 0, add a new ball to the game
+        if (self.ballCounter == 0) {
+            [scene runAction:[SKAction performSelector:@selector(addBall) onTarget:self]];
+        }
+    }
+    
     // if a ball comes in contact with the force field
     // shoot the balls back up and increment the score
     else if ((firstBody.categoryBitMask & ballCategory) != 0 && (secondBody.categoryBitMask & forceFieldCategory) != 0) {
         NSLog(@"FORCE FIELD!!");
         [forceFieldSound play];
-        [firstBody applyImpulse:CGVectorMake(arc4random() % 20 + 50, 50)];
+        [firstBody applyImpulse:CGVectorMake(arc4random() % 20 + 50, 70)];
     }
     
     // checks for collision of power up and paddle
-    else if ((firstBody.categoryBitMask & paddleCategory) != 0 && (secondBody.categoryBitMask & powerUpCategory) != 1) {
+    if ((firstBody.categoryBitMask & paddleCategory) != 0 && (secondBody.categoryBitMask & powerUpCategory) != 1) {
         self.powerUpReceived = YES;
         [powerUp removeFromParent];
         
@@ -920,7 +1034,7 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
     
     // if the user is to miss a power up and the power up reaches the bottom of the screen
     // regenerate a power up
-    else if ((firstBody.categoryBitMask & powerUpCategory) != 0 && (secondBody.categoryBitMask & powerUpBarrierCategory) != 0) {
+    if ((firstBody.categoryBitMask & powerUpCategory) != 0 && (secondBody.categoryBitMask & powerUpBarrierCategory) != 0) {
         NSLog(@"power up regenerated");
         self.powerUpIsVisible = NO;
     }
@@ -928,6 +1042,8 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
     // if a ball hits the game over barrier below the paddle
     // the game is over
     else if ((firstBody.categoryBitMask & ballCategory) != 0 && (secondBody.categoryBitMask & gameOverBarrierCategory) != 0) {
+        
+        NSLog(@"Lost a ball");
         
         // checks to see if the game is over
         if (!self.isGameOver) {
@@ -938,9 +1054,9 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
             // decrement ball counter
             self.ballCounter--;
         
-            // if the user sucks an loses a life when only one ball is present
+            // if the user sucks and loses a life when only one ball is present
             // add in another ball
-            if (self.ballCounter == 0 ) {
+            if (self.ballCounter == 0) {
                 [scene runAction:[SKAction performSelector:@selector(addBall) onTarget:self]];
             }
         
@@ -951,9 +1067,6 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
         // if the user has 0 lives
         // the game is over
         if (self.lives == 0) {
-            
-            self.gameTimer = nil;
-        
             // call game over method
             [self gameOver];
         
@@ -976,6 +1089,37 @@ static const uint32_t powerUpBarrierCategory = 0x1 << 8;
     // this is our pulse action that will run the two animations
     SKAction *pulse = [SKAction sequence:@[disappear, appear]];
     [node runAction:[SKAction repeatActionForever:pulse]];
+}
+
+// this animation rotates the black hole
+-(void)rotate:(SKNode *)node
+{
+    SKAction *rotate = [SKAction rotateByAngle:-5 duration:1];
+    [node runAction:[SKAction repeatActionForever:rotate]];
+}
+
+// this animation rotates the nuke emblem that appears when receiving the nuke power up
+-(void)rotateNuke:(SKNode *)node
+{
+    SKAction *rotate = [SKAction rotateByAngle:-1 duration:1];
+    [node runAction:[SKAction repeatActionForever:rotate]];
+}
+
+// this animation shows the explosion of the nuke
+-(void)explode:(SKNode *)node
+{
+    SKAction *explode = [SKAction fadeAlphaTo:1.0 duration:1];
+    [node runAction:[SKAction repeatAction:explode count:1]];
+    if (node.alpha == 1.0) {
+        NSLog(@"explosion finished");
+    }
+}
+
+// this animation fires the missile from the paddle
+-(void)fireMissile:(SKNode *)node
+{
+    SKAction *shoot = [SKAction moveBy:CGVectorMake(0, 425) duration:1];
+    [node runAction:[SKAction repeatActionForever:shoot]];
 }
 
 // see comment below
