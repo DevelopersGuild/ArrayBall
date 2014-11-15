@@ -157,6 +157,7 @@ static const uint32_t missileCategory = 0x1 << 9;
     
     // set up our node tree
     
+    
     [self removeAllChildren];
     [self removeAllActions];
     [scene removeAllActions];
@@ -183,6 +184,7 @@ static const uint32_t missileCategory = 0x1 << 9;
     
     // game seconds starts at 0
     self.gameSeconds = 0;
+     
 }
 
 -(void)loadObjectsToScreen
