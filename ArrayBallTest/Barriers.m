@@ -64,5 +64,15 @@
     return gameOverBarrier;
 }
 
++(id)paddleBarrier
+{
+    Barriers *paddleTopBarrier = [Barriers spriteNodeWithColor:[UIColor blackColor] size:CGSizeMake(1000, 20)];
+    paddleTopBarrier.name = @"paddleTopBarrier";
+    paddleTopBarrier.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:paddleTopBarrier.size];
+    paddleTopBarrier.physicsBody.dynamic = NO;
+    paddleTopBarrier.physicsBody.affectedByGravity = NO;
+    
+    return paddleTopBarrier;
+}
 
 @end

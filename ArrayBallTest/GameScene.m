@@ -9,11 +9,13 @@
 //  Make 'Tap to begin label' white with a black border
 
 #import "GameScene.h"
+#import "MainMenuScene.h"
 #import "Paddle.h"
 #import "Ball.h"
 #import "Barriers.h"
 #import "PointsLabel.h"
 #import "PowerUp.h"
+
 
 // this gets us access to the AVAudioPlayer class
 // which we use to play the game music
@@ -22,6 +24,10 @@
 // set up property to hold the speed of the ball here
 
 @interface GameScene ()
+
+// this checks to see if the user is not on the title screen
+@property BOOL passedTitleScreen;
+
 // this checks to see if the game has started
 @property BOOL isStarted;
 // checks to see if the game is over
@@ -73,6 +79,8 @@
 // checks to see if the nuke label has been added on screen
 @property BOOL nukeLabelAdded;
 
+@property BOOL nukeMusic;
+
 // number of seconds for the timer of each power up
 @property int seconds;
 
@@ -113,7 +121,7 @@
     
     // this array holds all of the game sounds
     NSMutableArray *soundsArray;
-
+    
     // game barriers
     Barriers *rightBarrier, *topBarrier, *leftBarrier, *gameOverBarrier;
     
@@ -150,13 +158,27 @@ static const uint32_t missileCategory = 0x1 << 9;
 
 //static const uint32_t barrierCategory = 0x1 << 1;
 
++(instancetype)unarchiveFromFile:(NSString *)file {
+    /* Retrieve scene file path from the application bundle */
+    NSString *nodePath = [[NSBundle mainBundle] pathForResource:file ofType:@"sks"];
+    /* Unarchive the file to an SKScene object */
+    NSData *data = [NSData dataWithContentsOfFile:nodePath
+                                          options:NSDataReadingMappedIfSafe
+                                            error:nil];
+    NSKeyedUnarchiver *arch = [[NSKeyedUnarchiver alloc] initForReadingWithData:data];
+    [arch setClass:self forClassName:@"SKScene"];
+    GameScene *scene = [arch decodeObjectForKey:NSKeyedArchiveRootObjectKey];
+    [arch finishDecoding];
+    
+    return scene;
+}
+
 #pragma mark Game Setup
 
 -(void)didMoveToView:(SKView *)view {
     /* Setup your scene here */
     
     // set up our node tree
-    
     
     [self removeAllChildren];
     [self removeAllActions];
@@ -177,14 +199,11 @@ static const uint32_t missileCategory = 0x1 << 9;
     
     [self setUpCategories];
     
-   // self.powerUp = YES;
-    
     // paddle hit count starts at 0
     paddleHitCount = 0;
     
     // game seconds starts at 0
     self.gameSeconds = 0;
-     
 }
 
 -(void)loadObjectsToScreen
@@ -251,6 +270,7 @@ static const uint32_t missileCategory = 0x1 << 9;
     [scene addChild:[self resetButton]];
 }
 
+
 // this creates the button that moves our paddle left
 -(SKSpriteNode *)leftButton
 {
@@ -285,6 +305,11 @@ static const uint32_t missileCategory = 0x1 << 9;
     resetButton.alpha = 1.0;
     
     return resetButton;
+}
+
+-(void)addScoreLabel
+{
+    [scene addChild:scoreLabel];
 }
 
 // loads the game's score labels
@@ -361,7 +386,7 @@ static const uint32_t missileCategory = 0x1 << 9;
     ball.physicsBody.collisionBitMask = barrierCategory;
     
     paddle.physicsBody.categoryBitMask = paddleCategory;
-
+    
     rightBarrier.physicsBody.categoryBitMask = barrierCategory;
     
     topBarrier.physicsBody.categoryBitMask = barrierCategory;
@@ -403,7 +428,7 @@ static const uint32_t missileCategory = 0x1 << 9;
     SKLabelNode *gameOverLabel = [SKLabelNode labelNodeWithFontNamed:@"AmericanTypewriter-Bold"];
     gameOverLabel.name = @"gameOverLabel";
     gameOverLabel.text = @"Game Over!";
-    gameOverLabel.color = [UIColor blueColor];
+    gameOverLabel.color = [UIColor purpleColor];
     gameOverLabel.colorBlendFactor = 1.0;
     gameOverLabel.fontSize = 50.0;
     gameOverLabel.position = CGPointMake(0, 300);
@@ -412,15 +437,33 @@ static const uint32_t missileCategory = 0x1 << 9;
     // tap to reset label creation
     SKLabelNode *tapToResetLabel = [SKLabelNode labelNodeWithFontNamed:@"AmericanTypewriter-Bold"];
     tapToResetLabel.name = @"tapToResetLabel";
-    tapToResetLabel.text = @"Tap to reset!";
-    tapToResetLabel.color = [UIColor purpleColor];
+    tapToResetLabel.text = @"Tap here to restart!";
+    tapToResetLabel.color = [UIColor greenColor];
     tapToResetLabel.colorBlendFactor = 1.0;
-    tapToResetLabel.fontSize = 30.0;
+    tapToResetLabel.fontSize = 40.0;
     tapToResetLabel.position = CGPointMake(0, 150);
     [scene addChild:tapToResetLabel];
     [self animateWithPulse:tapToResetLabel];
     
+    SKLabelNode *mainMenuLabel = [SKLabelNode labelNodeWithFontNamed:@"AmericanTypewriter-Bold"];
+    mainMenuLabel.name = @"mainMenuLabel";
+    mainMenuLabel.text = @"Main menu";
+    mainMenuLabel.color = [UIColor greenColor];
+    mainMenuLabel.colorBlendFactor = 1.0;
+    mainMenuLabel.fontSize = 40.0;
+    mainMenuLabel.position = CGPointMake(0, 80);
+    [scene addChild:mainMenuLabel];
+    [self animateWithPulse:mainMenuLabel];
+    
     [self updateHighScore];
+}
+
+- (void)doGameOverVolumeFade
+{
+    if (gameOverMusic.volume > 0.1) {
+        gameOverMusic.volume -= 0.1;
+        [self performSelector:@selector(doGameOverVolumeFade) withObject:nil afterDelay:0.08];
+    }
 }
 
 // this is called when everything is to be restarted
@@ -433,6 +476,7 @@ static const uint32_t missileCategory = 0x1 << 9;
     }
     
     [gameOverMusic stop];
+    [self.gameTimer invalidate];
     
     // create a new gamescene
     GameScene *newScene = [[GameScene alloc] initWithSize:self.frame.size];
@@ -442,6 +486,16 @@ static const uint32_t missileCategory = 0x1 << 9;
     
     // present the new game
     [self.view presentScene:newScene];
+    
+    if (self.nukeLabelAdded)
+    {
+        [self.powerUpTimer invalidate];
+        [nuke removeFromParent];
+        [nukeCountDownLabel removeFromParent];
+        [explosion removeFromParent];
+    }
+    
+    [nukeSound stop];
 }
 
 #pragma mark Touch Events
@@ -449,50 +503,91 @@ static const uint32_t missileCategory = 0x1 << 9;
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     /* Called when a touch begins */
     
+    // create a touch object to look for touch
+    UITouch *touch = [touches anyObject];
+    
+    // finds the location of a touch
+    CGPoint location = [touch locationInNode:scene];
+    
+    SKNode *node = [self nodeAtPoint:location];
+    
     // this starts the movement of the ball
     if (!self.isStarted) {
         [self start];
     }
     
     else if (self.isGameOver) {
-        [self restartGame];
+        if ([node.name isEqualToString:@"tapToResetLabel"])
+        {
+            [self restartGame];
+        }
+        
+        else if ([node.name isEqualToString:@"mainMenuLabel"])
+        {
+            NSLog(@"mainMenuLabel touched");
+            [self removeAllActions];
+            [self doGameOverVolumeFade];
+            
+            SKTransition *gameTransition = [SKTransition crossFadeWithDuration:3];
+            MainMenuScene *menuScene = [MainMenuScene sceneWithSize:self.view.bounds.size];
+            menuScene.scaleMode = SKSceneScaleModeAspectFill;
+            [self.view presentScene:menuScene transition:gameTransition];
+        }
     }
     
     // this block is executed if the game has already started
     else {
         self.isTouching = YES;
         
-        // create a touch object to look for touch
-        UITouch *touch = [touches anyObject];
-        
-        // finds the location of a touch
-        CGPoint location = [touch locationInNode:scene];
-        
-        SKNode *node = [self nodeAtPoint:location];
-        
-    
         // if the user touches the left button, move the paddle left
         if ([node.name isEqualToString:@"leftButton"]) {
             self.movingLeft = YES;
-            [paddle movePaddleLeft:-8];
+            SKAction *movePaddleLeft = [SKAction moveBy:CGVectorMake(-50, 0) duration:0.1];
+            SKAction *repeatMoveLeft = [SKAction repeatActionForever:movePaddleLeft];
+            [paddle runAction:repeatMoveLeft];
         }
         
         // if the user touches the right button, move the paddle right
         else if ([node.name isEqualToString:@"rightButton"]) {
             self.movingRight = YES;
-            [paddle movePaddleRight:8];
+            SKAction *movePaddleRight = [SKAction moveBy:CGVectorMake(50, 0) duration:0.1];
+            SKAction *repeatMoveRight = [SKAction repeatActionForever:movePaddleRight];
+            [paddle runAction:repeatMoveRight];
         }
         
-        else if ([node.name isEqualToString:@"resetButton"]) {
+        if ([node.name isEqualToString:@"resetButton"]) {
+            
+            if (self.nukeLabelAdded)
+            {
+                [self.powerUpTimer invalidate];
+                [nuke removeFromParent];
+                [nukeCountDownLabel removeFromParent];
+                [explosion removeFromParent];
+            }
+            
+            [nukeSound stop];
+            
             [gameMusic stop];
+            [self.gameTimer invalidate];
+            [self.powerUpTimer invalidate];
             GameScene *newScene = [[GameScene alloc] initWithSize:self.frame.size];
             
             newScene.scaleMode = SKSceneScaleModeAspectFill;
             
             [self.view presentScene:newScene];
         }
+        
+        // [self touchesMoved:touches withEvent:event];
     }
 }
+
+/*
+-(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    [paddle runAction:[SKAction moveTo:[[touches anyObject] locationInNode:self] duration:0.25]];
+    
+}
+*/
 
 -(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
 {
@@ -506,11 +601,13 @@ static const uint32_t missileCategory = 0x1 << 9;
     // if the user lets go of the left button, stop paddle movement
     if ([node.name isEqualToString:@"leftButton"]) {
         self.movingLeft = NO;
+        [paddle removeAllActions];
     }
     
     // if the user lets go of the right button, stop paddle movement
     else if ([node.name isEqualToString:@"rightButton"]) {
         self.movingRight = NO;
+        [paddle removeAllActions];
     }
 }
 
@@ -519,16 +616,19 @@ static const uint32_t missileCategory = 0x1 << 9;
 // this method adds a new ball to the game when needed
 -(void)addBall
 {
-    Ball *newBall = [Ball ball];
-    newBall.position = CGPointMake(paddle.position.x, paddle.position.y + 3);
+    if (!self.isGameOver)
+    {
+        Ball *newBall = [Ball ball];
+        newBall.position = CGPointMake(paddle.position.x, paddle.position.y + 3);
     
-    newBall.physicsBody.categoryBitMask = ballCategory;
-    newBall.physicsBody.contactTestBitMask = paddleCategory;
-    newBall.physicsBody.collisionBitMask = barrierCategory;
+        newBall.physicsBody.categoryBitMask = ballCategory;
+        newBall.physicsBody.contactTestBitMask = paddleCategory;
+        newBall.physicsBody.collisionBitMask = barrierCategory;
     
-    [scene addChild:newBall];
-    [ballArray addObject:newBall];
-    self.ballCounter++;
+        [scene addChild:newBall];
+        [ballArray addObject:newBall];
+        self.ballCounter++;
+    }
 }
 
 #pragma mark Game Timer
@@ -553,6 +653,7 @@ static const uint32_t missileCategory = 0x1 << 9;
     // keep incrementing score every second
     else {
         self.gameSeconds++;
+        //NSLog(@"%i", self.gameSeconds);
         [scoreLabel increment];
         
         if (explosion.alpha == 1.0) {
@@ -561,6 +662,7 @@ static const uint32_t missileCategory = 0x1 << 9;
         }
     }
 }
+
 
 #pragma mark Powerup Generation and Timers
 
@@ -735,7 +837,7 @@ static const uint32_t missileCategory = 0x1 << 9;
             
             self.powerUp = NO;
             self.powerUpIsVisible = NO;
-
+            
         }
         
         else if (self.randomPowerUp == 7 && self.powerUpReceived) {
@@ -748,13 +850,19 @@ static const uint32_t missileCategory = 0x1 << 9;
             self.powerUp = NO;
             self.powerUpIsVisible = NO;
             self.nukeLabelAdded = NO;
+            self.nukeMusic = NO;
         }
     }
     
     else {
         
         if (self.nukeTime && self.randomPowerUp == 7) {
-            [nukeSound play];
+            if (!self.nukeMusic)
+            {
+                [nukeSound play];
+                self.nukeMusic = YES;
+            }
+            
             self.seconds--;
             NSLog(@"Seconds left: %i", self.seconds);
             
@@ -792,7 +900,7 @@ static const uint32_t missileCategory = 0x1 << 9;
     
     vortex.physicsBody.categoryBitMask = powerUpNetCategory;
     vortex.physicsBody.contactTestBitMask = ballCategory;
-
+    
     [scene addChild:vortex];
     [self rotate:vortex];
 }
@@ -897,7 +1005,6 @@ static const uint32_t missileCategory = 0x1 << 9;
     [self explode:explosion];
     
     [scene runAction:[SKAction performSelector:@selector(addBall) onTarget:self]];
-    self.ballCounter = 1;
     
     self.nukeTime = NO;
 }
@@ -938,6 +1045,18 @@ static const uint32_t missileCategory = 0x1 << 9;
     }
 }
 
+/*
+-(void)addSpark
+{
+    SKEmitterNode *spark = [NSKeyedUnarchiver unarchiveObjectWithFile:[[NSBundle mainBundle] pathForResource:@"Spark" ofType:@"sks"]];
+    spark.name = @"spark";
+    spark.targetNode = self.scene;
+    spark.zPosition = 2.0;
+    spark.position = CGPointMake(paddle.position.x, paddle.position.y + 20);
+    [self addChild:spark];
+}
+*/
+
 #pragma mark Collision Detection
 
 -(void)didBeginContact:(SKPhysicsContact *)contact
@@ -960,6 +1079,9 @@ static const uint32_t missileCategory = 0x1 << 9;
         // increment paddle hit counter
         paddleHitCount++;
         
+        //[scene runAction:[SKAction performSelector:@selector(addSpark) onTarget:self]];
+        
+        
         // move ball up
         [firstBody applyImpulse:CGVectorMake(arc4random() % 20 + 50, arc4random() % 20 + 70)];
         
@@ -972,6 +1094,7 @@ static const uint32_t missileCategory = 0x1 << 9;
         // if the power is not visible and the random number is true, add the power up to the scene
         if ([self getRandomNumber] == 2 && !self.powerUpIsVisible) {
             [scene runAction:[SKAction performSelector:@selector(addPowerUp) onTarget:self]];
+            NSLog(@"Power up added to scene");
             
             // the power up is now visible
             self.powerUpIsVisible = YES;
@@ -984,7 +1107,9 @@ static const uint32_t missileCategory = 0x1 << 9;
         }
         
         // play paddle sound
-        [paddleSound play];
+        SKAction *paddleNoise = [SKAction playSoundFileNamed:@"paddleSound.wav" waitForCompletion:NO];
+        [self runAction:paddleNoise];
+        
     }
     
     // if a ball comes in contact with the vortex, set the balls velocity to 0 in all directions
@@ -1016,7 +1141,8 @@ static const uint32_t missileCategory = 0x1 << 9;
     // shoot the balls back up and increment the score
     else if ((firstBody.categoryBitMask & ballCategory) != 0 && (secondBody.categoryBitMask & forceFieldCategory) != 0) {
         NSLog(@"FORCE FIELD!!");
-        [forceFieldSound play];
+        SKAction *forceFieldNoise = [SKAction playSoundFileNamed:@"forceField.wav" waitForCompletion:NO];
+        [self runAction:forceFieldNoise];
         [firstBody applyImpulse:CGVectorMake(arc4random() % 20 + 50, 70)];
     }
     
@@ -1049,21 +1175,23 @@ static const uint32_t missileCategory = 0x1 << 9;
         
         // checks to see if the game is over
         if (!self.isGameOver) {
-        
+            
             // decrement lives
             self.lives--;
-        
+            
             // decrement ball counter
             self.ballCounter--;
-        
+            
             // if the user sucks and loses a life when only one ball is present
             // add in another ball
             if (self.ballCounter == 0) {
                 [scene runAction:[SKAction performSelector:@selector(addBall) onTarget:self]];
             }
-        
+            
             // update lives label
             lifeLabel.text = [NSString stringWithFormat:@"%i", self.lives];
+            
+            NSLog(@"%i", self.ballCounter);
         }
         
         // if the user has 0 lives
@@ -1071,9 +1199,17 @@ static const uint32_t missileCategory = 0x1 << 9;
         if (self.lives == 0) {
             // call game over method
             [self gameOver];
-        
+            
             // set this so that when the remaining balls fall down, they don't touch the paddle
             paddle.physicsBody.categoryBitMask = 0;
+            
+            if (self.nukeLabelAdded)
+            {
+                [self.powerUpTimer invalidate];
+                [nuke removeFromParent];
+                [nukeCountDownLabel removeFromParent];
+                [explosion removeFromParent];
+            }
         }
     }
 }
@@ -1122,12 +1258,15 @@ static const uint32_t missileCategory = 0x1 << 9;
 {
     SKAction *shoot = [SKAction moveBy:CGVectorMake(0, 425) duration:1];
     [node runAction:[SKAction repeatActionForever:shoot]];
+    SKAction *spaceLaserSound = [SKAction playSoundFileNamed:@"spaceLaser.wav" waitForCompletion:NO];
+    [self runAction:spaceLaserSound];
 }
 
 // see comment below
--(void)update:(CFTimeInterval)currentTime {
+-(void)update:(CFTimeInterval)currentTime
+{
     /* Called before each frame is rendered */
-    
+    /*
     if (self.isTouching && self.movingLeft) {
         [paddle movePaddleLeft:-10];
     }
@@ -1135,6 +1274,15 @@ static const uint32_t missileCategory = 0x1 << 9;
     else if (self.isTouching && self.movingRight) {
         [paddle movePaddleRight:10];
     }
+    */
+}
+
+@end
+
+@implementation SKEmitterNode (fromFile)
++(instancetype)orb_emitterNamed:(NSString *)name
+{
+    return [NSKeyedUnarchiver unarchiveObjectWithFile:[[NSBundle alloc] pathForResource:name ofType:@"sks"]];
 }
 
 @end
